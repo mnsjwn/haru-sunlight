@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="description" content="오늘 언제 몇 분 햇빛을 쬐야 비타민D가 채워지는지 계산해 주는 앱">
+<title>일광 처방</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+  <div class="screen active" id="screen-home"></div>
+  <div class="screen" id="screen-timer"></div>
+  <div class="screen" id="screen-weekly"></div>
+  <div class="screen" id="screen-settings"></div>
+
+  <nav class="tabs">
+    <button class="tab on" data-tab="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg>
+      <span>홈</span>
+    </button>
+    <button class="tab" data-tab="timer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+      <span>타이머</span>
+    </button>
+    <button class="tab" data-tab="weekly">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>
+      <span>주간</span>
+    </button>
+    <button class="tab" data-tab="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-2.7 1.1v.3a2 2 0 11-4 0v-.2a1.6 1.6 0 00-2.8-1.1l-.1.1a2 2 0 11-2.8-2.8l.1-.1A1.6 1.6 0 004.6 15a2 2 0 00-1.8-1.2h-.3a2 2 0 010-4h.2A1.6 1.6 0 004.6 9a1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5v-.3a2 2 0 014 0v.2a1.6 1.6 0 002.7 1.2l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8v.1a1.6 1.6 0 001.5 1H21a2 2 0 010 4h-.2a1.6 1.6 0 00-1.4 1z"/></svg>
+      <span>설정</span>
+    </button>
+  </nav>
+</div>
+
+<div id="onboarding"></div>
+
+<div class="sheet-bg" id="sheet-bg">
+  <div class="sheet" id="sheet-body"></div>
+</div>
+
+<div id="toast"></div>
+
+<!-- 기상청 서비스키 — 앱 기능이 아니라 이 파일로만 넣는다.
+     config.local.js는 .gitignore에 등록돼 있어 깃허브에 올라가지 않는다.
+     없으면 이 한 줄만 404로 조용히 실패하고 나머지는 정상 동작한다(키 없음 화면으로 안내). -->
+<script src="config.local.js"></script>
+
+<!-- ===== 백엔드 계층 (core) — 순수 로직 · 데이터 · DOM 접근 없음 ===== -->
+<script src="core/solar.js"></script>
+<script src="core/engine.js"></script>
+<script src="core/store.repo.js"></script>
+<script src="core/kma.geo.js"></script>
+<script src="core/providers/kma.provider.js"></script>
+<script src="core/weather.api.js"></script>
+
+<!-- ===== 공용 (shared) ===== -->
+<script src="shared/ui.js"></script>
+<script src="core/prescription.js"></script>
+<script src="shared/chart.js"></script>
+<script src="shared/notify.js"></script>
+
+<!-- ===== 기능별 서비스(로직) + 뷰(화면) ===== -->
+<script src="features/onboarding/onboarding.service.js"></script>
+<script src="features/onboarding/onboarding.view.js"></script>
+<script src="features/home/home.service.js"></script>
+<script src="features/home/home.view.js"></script>
+<script src="features/timer/timer.service.js"></script>
+<script src="features/timer/timer.view.js"></script>
+<script src="features/weekly/weekly.service.js"></script>
+<script src="features/weekly/weekly.view.js"></script>
+<script src="features/settings/settings.service.js"></script>
+<script src="features/settings/settings.view.js"></script>
+
+<!-- ===== 앱 셸 ===== -->
+<script src="shared/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+/* =========================================================
+   shared / 앱 셸 — 부트스트랩 · 탭 라우팅 · 상태 보유
+   기능 뷰는 여기서만 호출한다. 계산은 전부 core 계층이 한다.
+   ========================================================= */
+var App = (function () {
+
+  var state = {
+    profile: null,
+    location: null,
+    weather: null,
+    stale: false,
+    rx: null,          // 오늘 처방 (invalidate() 되면 다시 계산)
+    tab: 'home',
+    loading: true,
+    error: null
+  };
+
+  /* ---------- 부트 ---------- */
+  function init() {
+    document.getElementById('sheet-bg').onclick = function (e) {
+      if (e.target.id === 'sheet-bg') UI.closeSheet();
+    };
+    [].forEach.call(document.querySelectorAll('.tab'), function (t) {
+      t.onclick = function () { go(t.dataset.tab); };
+    });
+
+    state.profile = Repo.getProfile();
+    state.location = Repo.getLocation();
+
+    if (!state.profile.onboarded || !state.location) {
+      OnboardingView.show();
+      return;
+    }
+    var hash = (location.hash || '').replace('#', '');
+    if (hash) state.tab = hash;
+    applyActiveTab(state.tab);
+    boot();
+  }
+
+  function boot() {
+    state.profile = Repo.getProfile();
+    state.location = Repo.getLocation();
+    state.loading = true;
+    state.error = null;
+    applyActiveTab(state.tab);   // go()를 안 거쳐도 지금 탭이 보이게 먼저 맞춘다
+    renderSkeleton();
+
+    WeatherAPI.load(state.location, false)
+      .then(function (res) {
+        state.weather = res.data;
+        state.stale = res.stale;
+        state.loading = false;
+        invalidate();
+        if (state.profile.notify) Notify.schedule(prescription());
+        go(state.tab);
+      })
+      .catch(function (err) {
+        state.loading = false;
+        state.error = err;
+        refreshView();   // 설정 탭이면 renderError 대신 SettingsView가 뜨도록 분기를 태운다
+      });
+  }
+
+  function refresh(force) {
+    if (!state.location) return;
+    state.location = Repo.getLocation();
+    WeatherAPI.load(state.location, !!force).then(function (res) {
+      state.weather = res.data;
+      state.stale = res.stale;
+      invalidate();
+      if (state.profile.notify) Notify.schedule(prescription());
+      refreshView();
+    }).catch(function (e) {
+      UI.toast(e && e.noKey ? '기상청 서비스키가 없어요 — config.local.js를 확인해 주세요' : '예보를 받지 못했어요');
+    });
+  }
+
+  /* ---------- 처방 (설정 변경 시 재계산) ---------- */
+  function invalidate() { state.rx = null; state.profile = Repo.getProfile(); }
+
+  function prescription() {
+    if (!state.weather || !state.location) return null;
+    if (!state.rx) {
+      state.rx = Prescription.forToday(state.weather, state.location, Repo.getProfile());
+    }
+    return state.rx;
+  }
+
+  /* ---------- 라우팅 ---------- */
+  var TABS = ['home', 'timer', 'weekly', 'settings'];
+
+  /* 탭 버튼·화면의 active 클래스만 맞춘다. renderSkeleton/renderError처럼
+     go()를 거치지 않고 state.tab에 직접 그리는 경로도 이걸 먼저 불러야
+     그 화면이 실제로 보인다(안 그러면 콘텐츠는 그려지는데 숨겨진 채로 남는다). */
+  function applyActiveTab(tab) {
+    [].forEach.call(document.querySelectorAll('.tab'), function (t) {
+      t.classList.toggle('on', t.dataset.tab === tab);
+    });
+    [].forEach.call(document.querySelectorAll('.screen'), function (s) {
+      s.classList.toggle('active', s.id === 'screen-' + tab);
+    });
+  }
+
+  function go(tab) {
+    if (TABS.indexOf(tab) < 0) tab = 'home';
+    state.tab = tab;
+    if (location.hash !== '#' + tab) {
+      try { history.replaceState(null, '', '#' + tab); } catch (e) {}
+    }
+    applyActiveTab(tab);
+    if (tab !== 'timer') TimerView.stopLoop();
+    window.scrollTo(0, 0);
+    refreshView();
+  }
+
+  function refreshView() {
+    /* 설정 탭은 날씨를 못 받은 상태(키 없음·오류)에서도 항상 열려야 한다 —
+       거기서 config.local.js 설정 방법을 안내한다 */
+    if (state.tab === 'settings') return SettingsView.render();
+
+    if (state.loading) return renderSkeleton();
+    if (state.error) return renderError();
+    var rx = prescription();
+    if (!rx) return renderError();
+
+    if (state.tab === 'home') {
+      HomeView.render(HomeService.build(rx, { stale: state.stale }));
+    } else if (state.tab === 'timer') {
+      TimerView.render(rx);
+    } else if (state.tab === 'weekly') {
+      WeeklyView.render(WeeklyService.build(state.weather, state.location, Repo.getProfile()));
+    }
+  }
+
+  /* ---------- 액션 ---------- */
+  function startTimer(win) {
+    var rx = prescription();
+    if (!rx) return;
+    if (!TimerService.isRunning()) TimerService.start(rx, win || rx.activeWindow || rx.targetWindow);
+    go('timer');
+  }
+
+  function enableNotify() {
+    Notify.request().then(function (ok) {
+      Repo.setProfile({ notify: ok });
+      invalidate();
+      if (ok) {
+        var n = Notify.schedule(prescription());
+        UI.toast(n ? '창 ' + n + '개에 15분 전 알림을 걸었어요' : '오늘 남은 창이 없어요');
+      } else {
+        UI.toast('브라우저에서 알림이 차단돼 있어요');
+      }
+      refreshView();
+    });
+  }
+
+  /* ---------- 로딩 · 오류 ---------- */
+  function renderSkeleton() {
+    document.getElementById('screen-' + state.tab).innerHTML =
+      '<div class="hero" style="padding-top:40px">' +
+        '<div class="skel" style="width:88px;height:26px;border-radius:99px"></div>' +
+        '<div class="skel" style="width:110px;height:20px;margin-top:22px"></div>' +
+        '<div class="skel" style="width:190px;height:64px;margin-top:12px;border-radius:14px"></div>' +
+        '<div class="skel" style="width:70%;height:18px;margin-top:16px"></div>' +
+        '<div class="skel" style="width:55%;height:18px;margin-top:8px"></div>' +
+      '</div>' +
+      '<div class="sep"></div>' +
+      '<div class="sec">' +
+        '<div class="skel" style="width:100%;height:64px;margin-bottom:8px;border-radius:14px"></div>' +
+        '<div class="skel" style="width:100%;height:64px;margin-bottom:8px;border-radius:14px"></div>' +
+        '<div class="skel" style="width:100%;height:64px;border-radius:14px"></div>' +
+      '</div>';
+  }
+
+  function renderError() {
+    var noKey = state.error && state.error.noKey;
+    var icon = noKey ? '🔑' : '📡';
+    var msg = noKey
+      ? '기상청 서비스키가 설정되지 않았어요<br>config.local.js 파일에 넣으면 바로 시작됩니다'
+      : UI.esc((state.error && state.error.message) || '예보를 받지 못했어요') + '<br>네트워크나 서비스키를 확인해 주세요';
+
+    document.getElementById('screen-' + state.tab).innerHTML =
+      '<div class="empty" style="padding-top:100px"><em>' + icon + '</em>' + msg + '</div>' +
+      (noKey
+        ? '<div class="btn-wrap"><button class="btn btn-primary" id="e-settings">설정에서 방법 보기</button></div>'
+        : '<div class="btn-wrap"><button class="btn btn-primary" id="e-retry">다시 시도</button></div>' +
+          '<div class="btn-wrap"><button class="btn btn-sub" id="e-settings" style="margin-top:8px">설정으로 이동</button></div>');
+
+    var b = document.getElementById('e-retry');
+    if (b) b.onclick = function () { boot(); };
+    var s = document.getElementById('e-settings');
+    if (s) s.onclick = function () { go('settings'); };
+  }
+
+  /* ---------- 생명주기 ---------- */
+  var bootedDay = Engine.dayKey(new Date());
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) return;
+    var today = Engine.dayKey(new Date());
+    if (today !== bootedDay) { bootedDay = today; boot(); return; }   // 자정 넘김
+    invalidate();
+    refreshView();
+  });
+
+  return {
+    init: init, boot: boot, go: go, refresh: refresh,
+    refreshView: refreshView, invalidate: invalidate,
+    prescription: prescription, startTimer: startTimer, enableNotify: enableNotify,
+    get state() { return state; }
+  };
+})();
+
+document.addEventListener('DOMContentLoaded', function () {
+  App.init();
+  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
+});

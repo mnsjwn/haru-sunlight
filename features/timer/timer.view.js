@@ -1,0 +1,223 @@
+/* =========================================================
+   기능: 노출 타이머 — 뷰(화면)
+   한 화면 구성: 링 · 지금 상태 · 차림 · 버튼이 처음부터 모두 보인다.
+   "나갈게요"를 눌러도 화면이 바뀌지 않고 그 자리에서 카운트가 시작된다.
+   ========================================================= */
+var TimerView = (function () {
+
+  var el, loop = null, rx = null;
+  var R = 118, C = 2 * Math.PI * R;
+
+  function render(prescription) {
+    rx = prescription;
+    el = document.getElementById('screen-timer');
+    paint();
+    if (TimerService.isRunning()) startLoop();
+  }
+
+  /* 정지 상태에서 보여 줄 예상치 — 지금 열린 창이면 '지금', 아니면 다음 창의 최적 시점 */
+  function previewPoint() {
+    if (!rx) return null;
+    if (rx.activeWindow) return rx.nowPoint;
+    if (rx.targetWindow) return rx.targetWindow.best;
+    return rx.nowPoint;
+  }
+
+  function paint() {
+    var running = TimerService.isRunning();
+    var s = running ? TimerService.snapshot() : null;
+    var p = running ? s.point : previewPoint();
+    var w = rx ? (rx.activeWindow || rx.targetWindow) : null;
+
+    var seconds = running ? s.remainingSec : (p && isFinite(p.minutes) ? Math.round(p.minutes * 60) : null);
+    var pct = running ? Math.min(1, s.dose) : 0;
+
+    el.innerHTML =
+      '<div class="timer-wrap">' +
+        '<div class="top-mode ' + (running ? 'mode-normal' : 'mode-cloudy') +
+             '" style="justify-content:center;margin-bottom:14px">' +
+          '<span class="dot"></span>' + (running ? '노출 중' : '대기 중') +
+        '</div>' +
+
+        '<div class="ring">' +
+          '<svg width="260" height="260" viewBox="0 0 260 260">' +
+            '<circle cx="130" cy="130" r="' + R + '" fill="none" stroke="#F2F4F6" stroke-width="14"/>' +
+            '<circle id="t-arc" cx="130" cy="130" r="' + R + '" fill="none" stroke="#3182F6" ' +
+              'stroke-width="14" stroke-linecap="round" stroke-dasharray="' + C + '" ' +
+              'stroke-dashoffset="' + (C * (1 - pct)) + '" style="transition:stroke-dashoffset .5s linear"/>' +
+          '</svg>' +
+          '<div class="ring-in">' +
+            '<div class="ring-num" id="t-clock">' + clock(seconds) + '</div>' +
+            '<div class="ring-lab" id="t-lab">' + label(running, s, p) + '</div>' +
+            '<div class="ring-pct" id="t-pct">' + (running ? s.percent + '% 충전' : chargeHint(w)) + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="timer-live" id="t-live">' + liveText(running, s, p) + '</div>' +
+
+      gearSec() +
+
+      '<div id="t-act-idle" class="btn-wrap"' + (running ? ' hidden' : '') + '>' +
+        '<button class="btn btn-primary" id="t-start">' + UI.ICON.play + '나갈게요</button>' +
+      '</div>' +
+      '<div id="t-act-run" class="btn-row" style="margin-top:4px"' + (running ? '' : ' hidden') + '>' +
+        '<button class="btn btn-sub" id="t-stop">그만할래요</button>' +
+        '<button class="btn btn-primary" id="t-done">다 채웠어요</button>' +
+      '</div>' +
+
+      '<div class="sec">' +
+        '<div class="card">' +
+          '<div class="card-t">🔁 중간에 바꿔도 됩니다</div>' +
+          '<div class="card-b">옷차림이나 자외선차단제를 바꾸면 남은 시간이 즉시 다시 계산됩니다. ' +
+          '지나간 시간은 그때의 조건으로 이미 적립돼 있어요.</div>' +
+        '</div>' +
+      '</div>';
+
+    bind();
+  }
+
+  function label(running, s, p) {
+    if (running) return s.limitLabel + ' 기준 남은 시간';
+    if (!p || !isFinite(p.minutes)) return '지금은 자외선이 없어요';
+    return (rx && rx.activeWindow) ? '지금 나가면 필요한 시간' : '다음 창에서 필요한 시간';
+  }
+
+  function chargeHint(w) {
+    if (!rx) return '';
+    if (rx.activeWindow) return '창은 ' + UI.hm(rx.activeWindow.end) + '까지';
+    if (w) return UI.hmk(w.recommendStart) + '부터 열려요';
+    return '오늘은 열린 창이 없어요';
+  }
+
+  /* ---------- 옷차림 · SPF (즉시 반영) ---------- */
+  function gearSec() {
+    var p = Repo.getProfile();
+    var spfs = [1, 15, 30, 50];
+    return '<div class="sec" style="padding-bottom:12px">' +
+      '<div class="sec-title">지금 차림</div>' +
+      '<div class="sec-desc">바꾸면 바로 다시 계산됩니다.</div>' +
+      '<div class="seg" id="t-cloth">' +
+        Object.keys(Engine.CLOTHING).map(function (k) {
+          return '<button data-c="' + k + '"' + (p.clothing === k ? ' class="on"' : '') + '>' +
+                 Engine.CLOTHING[k].label + '</button>';
+        }).join('') +
+      '</div>' +
+      '<div style="height:8px"></div>' +
+      '<div class="seg" id="t-spf">' +
+        spfs.map(function (v) {
+          return '<button data-s="' + v + '"' + (+p.spf === v ? ' class="on"' : '') + '>' +
+                 (v === 1 ? '안 바름' : 'SPF ' + v) + '</button>';
+        }).join('') +
+      '</div></div>';
+  }
+
+  /* ---------- 이벤트 ---------- */
+  function bind() {
+    var q = function (id) { return document.getElementById(id); };
+
+    q('t-start').onclick = function () {
+      if (!rx) return UI.toast('예보를 불러오는 중이에요');
+      TimerService.start(rx, rx.activeWindow || rx.targetWindow);
+      q('t-act-idle').hidden = true;
+      q('t-act-run').hidden = false;
+      var mode = el.querySelector('.top-mode');
+      mode.className = 'top-mode mode-normal';
+      mode.innerHTML = '<span class="dot"></span>노출 중';
+      mode.style.justifyContent = 'center';
+      mode.style.marginBottom = '14px';
+      update(TimerService.tick());
+      startLoop();
+    };
+    q('t-stop').onclick = function () { end(false); };
+    q('t-done').onclick = function () { end(true); };
+
+    [].forEach.call(el.querySelectorAll('#t-cloth button'), function (b) {
+      b.onclick = function () { setGear({ clothing: b.dataset.c }); };
+    });
+    [].forEach.call(el.querySelectorAll('#t-spf button'), function (b) {
+      b.onclick = function () { setGear({ spf: +b.dataset.s }); };
+    });
+  }
+
+  function setGear(patch) {
+    Repo.setProfile(patch);
+    App.invalidate();
+    var p = Repo.getProfile();
+    [].forEach.call(el.querySelectorAll('#t-cloth button'), function (b) {
+      b.classList.toggle('on', b.dataset.c === p.clothing);
+    });
+    [].forEach.call(el.querySelectorAll('#t-spf button'), function (b) {
+      b.classList.toggle('on', +b.dataset.s === +p.spf);
+    });
+
+    if (TimerService.isRunning()) {
+      update(TimerService.tick());
+    } else {
+      /* 정지 상태에서도 예상 시간이 바로 바뀌어야 한다 */
+      rx = App.prescription() || rx;
+      var pt = previewPoint();
+      document.getElementById('t-clock').textContent =
+        clock(pt && isFinite(pt.minutes) ? Math.round(pt.minutes * 60) : null);
+      document.getElementById('t-live').innerHTML = liveText(false, null, pt);
+    }
+  }
+
+  /* ---------- 루프 ---------- */
+  function startLoop() {
+    stopLoop();
+    loop = setInterval(function () {
+      var s = TimerService.tick();
+      if (!s) return stopLoop();
+      update(s);
+      if (s.done) end(true);
+    }, 1000);
+  }
+  function stopLoop() { if (loop) { clearInterval(loop); loop = null; } }
+
+  function update(s) {
+    var q = function (id) { return document.getElementById(id); };
+    if (!q('t-clock')) return;
+    q('t-clock').textContent = clock(s.remainingSec);
+    q('t-lab').textContent = s.limitLabel + ' 기준 남은 시간';
+    q('t-pct').textContent = s.percent + '% 충전';
+    q('t-live').innerHTML = liveText(true, s, s.point);
+    var arc = q('t-arc');
+    if (arc) arc.setAttribute('stroke-dashoffset', C * (1 - Math.min(1, s.dose)));
+  }
+
+  function liveText(running, s, p) {
+    if (!p) return '예보를 불러오는 중이에요';
+    var head = '지금 UVI <b>' + p.uvi.toFixed(1) + '</b> · 체감 <b>' + p.heatIndexC.toFixed(0) + '℃</b>' +
+               ' · 태양고도 <b>' + p.altitude.toFixed(0) + '°</b>';
+    var need = '<br>이 조건에서 필요한 시간 <b>' + UI.mins(p.vitd) + '</b>';
+    if (!running) return head + need;
+    return head + need +
+      ' · 경과 <b>' + Math.floor(s.elapsedSec / 60) + '분 ' + (s.elapsedSec % 60) + '초</b>' +
+      (s.limitedBy !== 'vitd'
+        ? '<br><span style="color:#F04452;font-weight:700">⚠️ ' + s.limitLabel + '에 먼저 걸립니다</span>'
+        : '');
+  }
+
+  function clock(sec) {
+    if (sec == null || !isFinite(sec)) return '--:--';
+    var m = Math.floor(sec / 60), r = Math.floor(sec % 60);
+    return UI.p2(m) + ':' + UI.p2(r);
+  }
+
+  function end(completed) {
+    stopLoop();
+    var out = TimerService.stop();
+    if (out) {
+      if (completed) Notify.done(out.minutes, out.percent);
+      UI.toast(completed
+        ? '들어오세요 · ' + out.minutes + '분, ' + out.percent + '% 충전'
+        : out.minutes + '분 기록했어요 · ' + out.percent + '% 충전');
+    }
+    App.invalidate();
+    rx = App.prescription() || rx;
+    paint();
+  }
+
+  return { render: render, stopLoop: stopLoop };
+})();
