@@ -15,10 +15,7 @@ var SettingsView = (function () {
       '<div class="page-title">설정</div>' +
       '<div class="page-sub">한 번 정해 두면 매일 입력할 것은 없습니다.</div>' +
 
-      apiKeySec(m) +
-
-      '<div class="sep"></div>' +
-      '<div class="sec">' +
+      '<div class="sec" style="padding-top:8px">' +
         '<div class="sec-title">피부 타입</div>' +
         '<div class="sec-desc">Fitzpatrick 분류 · 현재 MED <b>' + m.medOfCurrent + ' J/m²</b>. ' +
           '타입이 한 단계 오르면 필요한 시간도 그만큼 늘어납니다.</div>' +
@@ -94,35 +91,6 @@ var SettingsView = (function () {
     bind();
   }
 
-  /* 기상청 서비스키 — 이 화면에서는 입력받지 않는다.
-     config.local.js(깃허브에 안 올라감)에 넣어야만 값이 채워지고,
-     여기서는 그 상태를 보여 주고 "연결 확인"으로 실제 동작만 검증한다. */
-  function apiKeySec(m) {
-    return '<div class="sec" style="padding-top:8px">' +
-      '<div class="sec-title">기상청 서비스키</div>' +
-      '<div class="sec-desc">이 화면에서는 입력할 수 없습니다. 프로젝트 루트의 ' +
-        '<b>config.local.js</b> 파일에 넣어야 해요 — <code>.gitignore</code>에 등록돼 있어 ' +
-        '깃허브에는 절대 올라가지 않습니다.</div>' +
-      '<div class="card' + (m.hasKey ? ' info' : ' warn') + '">' +
-        '<div class="card-t">' + (m.hasKey ? '✅ 키가 감지됐어요' : '⚠️ 키가 없어요') + '</div>' +
-        '<div class="card-b">' + (m.hasKey
-          ? 'config.local.js에서 값을 읽어 왔습니다. "연결 확인"으로 실제 데이터가 오는지 봐 주세요.'
-          : 'config.local.example.js를 config.local.js로 복사하고 안의 값을 채운 뒤 새로고침하세요.') +
-        '</div>' +
-      '</div>' +
-      (m.hasKey
-        ? '<button class="btn btn-primary" id="s-key-test" style="margin-top:8px">연결 확인</button>'
-        : '<dl class="official" style="margin-top:8px">' +
-            '<dt>설정 방법 (개발자용)</dt>' +
-            '<dd style="display:block;padding:6px 0;font-size:13px;color:#4E5968;line-height:1.7">' +
-              '1. <b>config.local.example.js</b>를 복사해 <b>config.local.js</b>로 저장<br>' +
-              '2. 그 안의 <b>window.KMA_SERVICE_KEY</b>에 발급받은 키를 붙여넣기<br>' +
-              '3. 페이지 새로고침' +
-            '</dd>' +
-          '</dl>') +
-    '</div>';
-  }
-
   /* 지역 선택 — 시도를 먼저 고르고 그 안의 지역을 고른다.
      지역마다 기상청 지점코드(areaNo)가 달라 자외선지수도 그 지역 값으로 바뀐다. */
   function regionPicker(m) {
@@ -163,17 +131,6 @@ var SettingsView = (function () {
 
   function bind() {
     var q = function (id) { return document.getElementById(id); };
-
-    if (q('s-key-test')) q('s-key-test').onclick = function () {
-      UI.toast('확인하는 중…');
-      SettingsService.testConnection()
-        .then(function (data) {
-          var uvNote = data.uvMissing ? ' (자외선지수는 실패: ' + data.uvError + ')' : '';
-          UI.toast('연결 성공 · ' + data.days.length + '일치 받아왔어요' + uvNote);
-          App.boot();   // 캐시가 신선해서 네트워크 재호출 없이 홈까지 바로 채워지고, 설정 화면도 다시 그려진다
-        })
-        .catch(function (e) { UI.toast('실패: ' + e.message); });
-    };
 
     [].forEach.call(el.querySelectorAll('#s-skin button'), function (b) {
       b.onclick = function () { SettingsService.set({ skinType: +b.dataset.t }); after(); };

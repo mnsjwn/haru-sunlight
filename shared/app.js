@@ -173,24 +173,40 @@ var App = (function () {
       '</div>';
   }
 
+  /* 서비스키는 앱 UI에 넣지 않는다(설정 화면에도 없음).
+     키가 없을 때만 이 화면에서 config.local.js 설정 방법을 안내한다. */
   function renderError() {
     var noKey = state.error && state.error.noKey;
-    var icon = noKey ? '🔑' : '📡';
-    var msg = noKey
-      ? '기상청 서비스키가 설정되지 않았어요<br>config.local.js 파일에 넣으면 바로 시작됩니다'
-      : UI.esc((state.error && state.error.message) || '예보를 받지 못했어요') + '<br>네트워크나 서비스키를 확인해 주세요';
 
-    document.getElementById('screen-' + state.tab).innerHTML =
-      '<div class="empty" style="padding-top:100px"><em>' + icon + '</em>' + msg + '</div>' +
-      (noKey
-        ? '<div class="btn-wrap"><button class="btn btn-primary" id="e-settings">설정에서 방법 보기</button></div>'
-        : '<div class="btn-wrap"><button class="btn btn-primary" id="e-retry">다시 시도</button></div>' +
-          '<div class="btn-wrap"><button class="btn btn-sub" id="e-settings" style="margin-top:8px">설정으로 이동</button></div>');
+    var body = noKey
+      ? '<div class="empty" style="padding-top:80px"><em>🔑</em>' +
+          '기상청 서비스키가 없어요' +
+        '</div>' +
+        '<div class="sec" style="padding-top:0">' +
+          '<div class="card warn">' +
+            '<div class="card-t">config.local.js 파일에 넣어 주세요</div>' +
+            '<div class="card-b">앱 화면에서는 키를 입력받지 않습니다. 아래대로 파일만 만들면 바로 시작돼요. ' +
+              '이 파일은 <b>.gitignore</b>에 등록돼 있어 깃허브에는 올라가지 않습니다.</div>' +
+          '</div>' +
+          '<dl class="official" style="margin-top:8px">' +
+            '<dt>설정 방법</dt>' +
+            '<dd style="display:block;padding:6px 0;font-size:13px;color:#4E5968;line-height:1.75">' +
+              '1. <b>config.local.example.js</b>를 복사해 <b>config.local.js</b>로 저장<br>' +
+              '2. 그 안의 <b>window.KMA_SERVICE_KEY</b>에 발급받은 키를 붙여넣기<br>' +
+              '3. 페이지 새로고침' +
+            '</dd>' +
+          '</dl>' +
+        '</div>' +
+        '<div class="btn-wrap"><button class="btn btn-primary" id="e-retry">다시 시도</button></div>'
+      : '<div class="empty" style="padding-top:100px"><em>📡</em>' +
+          UI.esc((state.error && state.error.message) || '예보를 받지 못했어요') +
+          '<br>네트워크 상태를 확인해 주세요' +
+        '</div>' +
+        '<div class="btn-wrap"><button class="btn btn-primary" id="e-retry">다시 시도</button></div>';
 
+    document.getElementById('screen-' + state.tab).innerHTML = body;
     var b = document.getElementById('e-retry');
     if (b) b.onclick = function () { boot(); };
-    var s = document.getElementById('e-settings');
-    if (s) s.onclick = function () { go('settings'); };
   }
 
   /* ---------- 매시 정각 자동 갱신 ----------

@@ -21,7 +21,6 @@ var SettingsService = (function () {
     return {
       profile: p,
       location: loc,
-      hasKey: WeatherAPI.hasKey(),
       skinOptions: SKIN,
       spfOptions: SPF,
       clothingOptions: Object.keys(Engine.CLOTHING).map(function (k) {
@@ -38,14 +37,6 @@ var SettingsService = (function () {
   }
 
   function set(patch) { return Repo.setProfile(patch); }
-
-  /* config.local.js에 넣어 둔 키 + 지금 위치로 실제 호출해 본다 —
-     경로·키가 맞는지 확인하는 용도일 뿐, 여기서 키를 입력받지는 않는다 */
-  function testConnection() {
-    var loc = Repo.getLocation();
-    if (!loc) return Promise.reject(new Error('위치가 설정되지 않았습니다'));
-    return WeatherAPI.load(loc, true).then(function (res) { return res.data; });
-  }
 
   function toggleNotify(on) {
     if (!on) { Repo.setProfile({ notify: false }); Notify.clear(); return Promise.resolve(false); }
@@ -74,7 +65,6 @@ var SettingsService = (function () {
   return {
     SKIN: SKIN, SPF: SPF,
     model: model, set: set, toggleNotify: toggleNotify,
-    testConnection: testConnection,
     useGeolocation: useGeolocation, useCity: useCity, resetAll: resetAll
   };
 })();
