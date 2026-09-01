@@ -32,28 +32,28 @@ function near(a, b, tol) { return Math.abs(a - b) <= tol; }
 /* ---------- 1. 엔진 단위 검증 (§2 공식 손계산 대조) ---------- */
 log('── 1. 엔진 · §2 공식');
 var r = Engine.computePoint({ uvi: 8, tempC: 25, rh: 50, skinType: 3, clothing: 'shortShort', spf: 1 });
-ok('비타민D = (0.4×300×0.40)/(1.5×8) = 4분', near(r.vitd, 4, 0.001), '실제 ' + r.vitd.toFixed(3));
+ok('비타민D = (0.4×300)/(1.5×8×0.40) = 25분', near(r.vitd, 25, 0.001), '실제 ' + r.vitd.toFixed(3));
 ok('화상   = (300×1)/(1.5×8) = 25분',        near(r.burn, 25, 0.001), '실제 ' + r.burn.toFixed(3));
-ok('최종 = min → 4분, 제한=vitd',            near(r.minutes, 4, 0.001) && r.limitedBy === 'vitd');
+ok('최종 = min(25, 25) → 화상 한계와 동률',   near(r.minutes, 25, 0.001));
 
 var r2 = Engine.computePoint({ uvi: 8, tempC: 25, rh: 50, skinType: 6, clothing: 'longLong', spf: 30 });
-ok('피부VI+긴팔긴바지 = (0.4×600×0.10)/12 = 2분', near(r2.vitd, 2, 0.001), '실제 ' + r2.vitd.toFixed(3));
+ok('피부VI+긴팔긴바지 = (0.4×600)/(12×0.10) = 200분', near(r2.vitd, 200, 0.001), '실제 ' + r2.vitd.toFixed(3));
 ok('SPF30 화상한계 = (600×30)/12 = 1500분',       near(r2.burn, 1500, 0.01));
 
 var r3 = Engine.computePoint({ uvi: 0, tempC: 25, rh: 50, skinType: 3, clothing: 'shortShort', spf: 1 });
 ok('UVI 0 → 무한대(창 안 열림)', !isFinite(r3.minutes));
 
-/* ⚠️ 명세 §2는 f_BSA를 분자에 둔다 → 옷을 더 입을수록 필요시간이 짧아진다.
-   현재 동작을 '고정'해 두는 테스트. 조에서 공식을 뒤집기로 하면 이 테스트도 같이 뒤집을 것. */
+/* f_BSA는 분모로 확정 → 옷을 더 껴입을수록(노출면적↓) 필요시간이 길어진다.
+   명세 원문(분자)으로 되돌리면 이 테스트도 같이 뒤집어야 한다. */
 var few = Engine.computePoint({ uvi: 8, tempC: 25, rh: 50, skinType: 3, clothing: 'longLong', spf: 1 }).vitd;
 var many = Engine.computePoint({ uvi: 8, tempC: 25, rh: 50, skinType: 3, clothing: 'shortShort', spf: 1 }).vitd;
-ok('[명세대로] 긴팔긴바지가 반팔반바지보다 필요시간이 짧다 (⚠️ 직관과 반대)',
+ok('긴팔긴바지가 반팔반바지보다 필요시간이 길다 (노출면적이 적을수록 오래)',
    Engine.F_BSA_IN_DENOMINATOR ? few > many : few < many,
    '긴팔 ' + few.toFixed(1) + '분 vs 반팔 ' + many.toFixed(1) + '분');
 ok('[구조] SPF를 발라도 비타민D 필요시간은 그대로 (§2 공식에 SPF가 없음)',
    Engine.computePoint({ uvi: 8, tempC: 25, rh: 50, skinType: 3, clothing: 'shortShort', spf: 50 }).vitd === many);
-ok('[구조] 차단제 없을 때 화상 한계는 비타민D 필요시간의 1/(k·f)=6.25배 → 절대 결정자가 못 됨',
-   Math.abs(Engine.computePoint({ uvi: 8, tempC: 25, rh: 50, skinType: 3, clothing: 'shortShort', spf: 1 }).burn / many - 6.25) < 0.01);
+ok('[구조] 차단제 없을 때 화상 한계 = 비타민D 필요시간 × (f/k) → 반팔반바지면 동률',
+   Math.abs(Engine.computePoint({ uvi: 8, tempC: 25, rh: 50, skinType: 3, clothing: 'shortShort', spf: 1 }).burn / many - 1.0) < 0.01);
 
 /* ---------- 2. §3 열 안전 상한 구간표 ---------- */
 log('── 2. §3 체감온도 구간');

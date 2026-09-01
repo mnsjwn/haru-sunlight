@@ -191,12 +191,28 @@ var TimerView = (function () {
     var head = '지금 UVI <b>' + p.uvi.toFixed(1) + '</b> · 체감 <b>' + p.heatIndexC.toFixed(0) + '℃</b>' +
                ' · 태양고도 <b>' + p.altitude.toFixed(0) + '°</b>';
     var need = '<br>이 조건에서 필요한 시간 <b>' + UI.mins(p.vitd) + '</b>';
-    if (!running) return head + need;
-    return head + need +
-      ' · 경과 <b>' + Math.floor(s.elapsedSec / 60) + '분 ' + (s.elapsedSec % 60) + '초</b>' +
-      (s.limitedBy !== 'vitd'
-        ? '<br><span style="color:#F04452;font-weight:700">⚠️ ' + s.limitLabel + '에 먼저 걸립니다</span>'
-        : '');
+    var body = head + need +
+      (running ? ' · 경과 <b>' + Math.floor(s.elapsedSec / 60) + '분 ' + (s.elapsedSec % 60) + '초</b>' : '');
+
+    /* 안전 한계가 목표보다 먼저 오면, 이 차림으로는 목표를 못 채운다는 걸 분명히 말해 준다.
+       (노출 면적이 적을수록 필요시간은 길어지는데 화상 한계는 그대로라서 생기는 상황) */
+    var cap = capNote(p);
+    if (cap) body += '<br><span style="color:#F04452;font-weight:700">' + cap + '</span>';
+    return body;
+  }
+
+  /* 목표(비타민D)보다 먼저 걸리는 한계가 있으면 그 이유와 해법을 한 줄로 */
+  function capNote(p) {
+    if (!isFinite(p.vitd)) return '';
+    if (p.heat <= 0) return '⚠️ 더위 때문에 지금은 나가면 안 돼요';
+    if (p.heat < p.vitd) {
+      return '⚠️ 열 안전 상한 ' + UI.mins(p.heat) + '에 먼저 걸려요 — 오늘은 목표를 못 채웁니다';
+    }
+    if (p.burn < p.vitd) {
+      return '⚠️ 화상 한계 ' + UI.mins(p.burn) + '에 먼저 걸려요 — 이 차림으론 목표를 못 채웁니다. ' +
+             '팔·다리를 더 내놓으면 필요시간이 줄어요';
+    }
+    return '';
   }
 
   function clock(sec) {
