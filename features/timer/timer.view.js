@@ -201,12 +201,17 @@ var TimerView = (function () {
     return body;
   }
 
-  /* 목표(비타민D)보다 먼저 걸리는 한계가 있으면 그 이유와 해법을 한 줄로 */
+  /* 목표(비타민D)보다 먼저 걸리는 한계가 있으면 그 이유와 '해법'을 한 줄로.
+     한계에 걸린다고 끝이 아니라, 나눠 쬐면 목표를 채울 수 있다는 게 핵심이다. */
   function capNote(p) {
     if (!isFinite(p.vitd)) return '';
-    if (p.heat <= 0) return '⚠️ 더위 때문에 지금은 나가면 안 돼요';
+    if (p.heat <= 0) return '⚠️ 더위 때문에 지금은 나가면 안 돼요 — 시원해지면 다시 알려드릴게요';
+
     if (p.heat < p.vitd) {
-      return '⚠️ 열 안전 상한 ' + UI.mins(p.heat) + '에 먼저 걸려요 — 오늘은 목표를 못 채웁니다';
+      var times = Math.ceil(p.vitd / p.heat);
+      return '⚠️ 더위 때문에 한 번에 ' + UI.mins(p.heat) + '까지예요. ' +
+             '목표를 채우려면 <u>' + UI.mins(p.heat) + '씩 ' + times + '번 나눠서</u> 나가세요' +
+             (p.heatNote ? ' · ' + p.heatNote : '');
     }
     if (p.burn < p.vitd) {
       return '⚠️ 화상 한계 ' + UI.mins(p.burn) + '에 먼저 걸려요 — 이 차림으론 목표를 못 채웁니다. ' +

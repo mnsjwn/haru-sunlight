@@ -168,14 +168,30 @@ var Engine = (function () {
     if (cur) wins.push(cur);
 
     return wins.map(function (w) {
-      // 창 안에서 가장 효율 좋은(= 필요시간이 가장 짧은) 시점을 권장 시작점으로
-      var best = w.points.reduce(function (m, p) { return p.minutes < m.minutes ? p : m; });
+      /* 창 안에서 권장 시점 고르기.
+         그냥 '필요시간이 가장 짧은' 시점을 고르면 안 된다 —
+         열 상한/화상 한계에 잘려서 짧아진 시각이 1등으로 뽑히기 때문이다.
+         (예: 12시 25분(목표 달성 가능) vs 14시 20분(열 상한에 잘림) → 14시가 뽑힘)
+
+         그래서 '목표를 실제로 끝까지 채울 수 있는 시점'을 먼저 추리고,
+         그 안에서 가장 짧은 시각을 고른다. 하나도 없으면 그때만 기존 방식으로 뽑되
+         화면에서 "목표를 못 채운다"고 알려 준다. */
+      var completable = w.points.filter(function (p) {
+        return p.vitd <= p.heat && p.vitd <= p.burn;
+      });
+      var pool = completable.length ? completable : w.points;
+      var best = pool.reduce(function (m, p) { return p.minutes < m.minutes ? p : m; });
+      w.completable = completable.length > 0;
       w.end += 10;                       // 마지막 표본이 대표하는 구간 폭
       w.best = best;
       w.recommendStart   = Math.round(best.minuteOfDay / 5) * 5;
       w.recommendMinutes = Math.max(1, Math.round(best.minutes));
       w.spanMinutes = w.end - w.start;
       return w;
+    }).sort(function (a, b) {
+      /* 목표를 채울 수 있는 창을 먼저, 그 안에서는 이른 시각 순 */
+      if (a.completable !== b.completable) return a.completable ? -1 : 1;
+      return a.start - b.start;
     });
   }
 

@@ -106,7 +106,9 @@ var HomeView = (function () {
           return '<button class="win-item' + (w.best ? ' best' : '') + '" data-win="' + w.index + '">' +
             '<div class="win-rank">' + (w.active ? '지금' : w.index + 1) + '</div>' +
             '<div><div class="win-time">' + w.timeText + '</div>' +
-                 '<div class="win-meta">' + w.meta + '</div></div>' +
+                 '<div class="win-meta">' + w.meta +
+                 (w.cappedNote ? '<br><span style="color:#F04452;font-weight:600">' + w.cappedNote + '</span>' : '') +
+                 '</div></div>' +
             '<div class="win-min">' + w.minutes + '<small>분</small></div>' +
           '</button>';
         }).join('') +

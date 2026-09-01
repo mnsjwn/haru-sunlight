@@ -189,6 +189,14 @@ var HomeService = (function () {
         minutes: w.recommendMinutes,
         meta: 'UVI ' + w.best.uvi.toFixed(1) + ' · 태양고도 ' + w.best.altitude.toFixed(0) +
               '° · ' + Math.round(w.best.tempC) + '℃',
+        /* 안전 한계에 잘려 목표를 못 채우는 창은 그 사실을 밝힌다 */
+        capped: w.completable === false,
+        cappedNote: w.completable === false
+          ? (w.best.limitedBy === 'heat'
+              ? '더위로 한 번에 ' + UI.mins(w.best.heat) + '까지 · ' +
+                Math.ceil(w.best.vitd / w.best.heat) + '번 나눠 나가면 채울 수 있어요'
+              : '화상 한계로 ' + UI.mins(w.best.burn) + '까지 · 팔·다리를 더 내놓으면 줄어요')
+          : null,
         best: i === 0,
         active: rx.activeWindow === w
       };

@@ -81,6 +81,29 @@ ok('폭염 2순위 · 오전 창만 남김', heat.id === 'heat' && heat.windows.
 ok('장마 3순위 (창 0개)', Engine.decideMode({ maxAltitude: 70, maxHeatIndexC: 25, windows: [] }).id === 'cloudy');
 ok('나머지는 평상',     Engine.decideMode({ maxAltitude: 70, maxHeatIndexC: 25, windows: W }).id === 'normal');
 
+/* 권장 시점은 '안전 한계에 잘린 짧은 시각'이 아니라
+   '목표를 실제로 채울 수 있는 시각'이어야 한다 */
+(function () {
+  function pt(min, vitd, burn, heat) {
+    return { minuteOfDay: min, vitd: vitd, burn: burn, heat: heat,
+             minutes: Math.min(vitd, burn, heat), open: true,
+             limitedBy: Math.min(vitd,burn,heat) === heat ? 'heat' : (Math.min(vitd,burn,heat) === burn ? 'burn' : 'vitd') };
+  }
+  // 12시: 25분(달성 가능) / 14시: 열 상한 20분에 잘림
+  var w = Engine.findWindows([
+    pt(720, 25, 40, Infinity),
+    pt(780, 33, 40, 20)
+  ])[0];
+  ok('권장 시점 = 잘린 20분(14시)이 아니라 달성 가능한 25분(12시)',
+     w.recommendStart === 720 && w.recommendMinutes === 25,
+     UI.hm(w.recommendStart) + ' · ' + w.recommendMinutes + '분');
+  ok('달성 가능한 시점이 있으면 completable = true', w.completable === true);
+
+  // 전 구간이 잘리는 경우엔 기존대로 최소값을 쓰되 completable=false로 표시
+  var w2 = Engine.findWindows([pt(720, 60, 40, 20), pt(780, 55, 40, 20)])[0];
+  ok('전부 잘리면 completable = false (화면에서 "목표 못 채움" 안내)', w2.completable === false);
+})();
+
 /* ---------- 5. 창 열림 3조건 ---------- */
 log('── 5. 창이 열리는 조건');
 var okr = { heat: Infinity, minutes: 20 };
