@@ -43,11 +43,19 @@ var WeatherAPI = (function () {
     });
   }
 
-  /* 하루 1회 호출 후 캐시 (§8). 실패해도 옛 캐시를 돌려준다(발표 중 네트워크 사고 대비). */
+  /* 캐시 수명 — 1시간.
+     명세 §8은 "하루 1회"였지만, 시간이 지나면 지금 시각의 자외선지수·기온이
+     달라지므로 1시간 주기로 다시 받아 화면이 따라가게 한다.
+     (기상청 발표 자체는 단기예보 3시간·자외선지수 6/18시 간격이라,
+      1시간마다 호출해도 새 발표가 나오면 그때 반영되는 구조다) */
+  var TTL_MS = 60 * 60 * 1000;
+
+  /* 실패해도 옛 캐시를 돌려준다(발표 중 네트워크 사고 대비). */
   function load(loc, force) {
     var cache = Repo.getWeatherCache();
     var fresh = cache && cache.dateKey === todayKey() &&
-                cache.lat === loc.lat && cache.lon === loc.lon;
+                cache.lat === loc.lat && cache.lon === loc.lon &&
+                (Date.now() - (cache.fetchedAt || 0)) < TTL_MS;
 
     if (fresh && !force) {
       return Promise.resolve({ data: cache, stale: false, cached: true });
@@ -65,8 +73,8 @@ var WeatherAPI = (function () {
   }
 
   return {
-    CITIES: CITIES, nearestCity: nearestCity,
+    CITIES: CITIES, GROUPS: KmaGeo.GROUPS, nearestCity: nearestCity,
     locate: locate, load: load, todayKey: todayKey,
-    hasKey: hasKey, inKorea: inKorea
+    hasKey: hasKey, inKorea: inKorea, TTL_MS: TTL_MS
   };
 })();

@@ -78,14 +78,30 @@ var OnboardingView = (function () {
       '</button>' +
       '<div style="text-align:center;font-size:13px;color:#8B95A1;font-weight:600;margin:18px 0 4px">' +
         '또는 도시 선택</div>' +
-      '<div class="ob-city">' +
-        WeatherAPI.CITIES.map(function (c) {
-          var on = l && !l.precise && l.name === c.name;
-          return '<button data-city="' + c.name + '"' + (on ? ' class="on"' : '') + '>' + c.name + '</button>';
-        }).join('') +
-      '</div>' +
+      obRegionPicker(l) +
       (l ? '<div class="card" style="margin-top:20px"><div class="card-b">선택됨 · <b>' + l.name +
            '</b> (' + l.lat + ', ' + l.lon + ')' + (l.precise ? ' · 현재 위치' : '') + '</div></div>' : '');
+  }
+
+  /* 시도 → 지역 2단계 선택 (설정 화면과 같은 방식) */
+  var obSido = null;
+  function obRegionPicker(l) {
+    var cur = l ? KmaGeo.findByName(l.name) : null;
+    var sido = obSido || (cur ? cur.sido : KmaGeo.GROUPS[0].sido);
+    var g = KmaGeo.GROUPS.filter(function (x) { return x.sido === sido; })[0] || KmaGeo.GROUPS[0];
+    return '<div style="font-size:12.5px;font-weight:700;color:#6B7684;margin:22px 0 7px">시 · 도</div>' +
+      '<div class="ob-city" id="ob-sido">' +
+        KmaGeo.GROUPS.map(function (x) {
+          return '<button data-sido="' + x.sido + '"' + (x.sido === sido ? ' class="on"' : '') + '>' + x.sido + '</button>';
+        }).join('') +
+      '</div>' +
+      '<div style="font-size:12.5px;font-weight:700;color:#6B7684;margin:16px 0 7px">' + g.sido + ' 지역</div>' +
+      '<div class="ob-city" id="ob-city">' +
+        g.areas.map(function (a) {
+          var on = l && l.name === a.name;
+          return '<button data-city="' + a.name + '"' + (on ? ' class="on"' : '') + '>' + a.name + '</button>';
+        }).join('') +
+      '</div>';
   }
 
   function bind(step) {
@@ -123,8 +139,15 @@ var OnboardingView = (function () {
               : '위치 권한이 없어요. 도시를 골라 주세요');
           });
       };
+      [].forEach.call(root.querySelectorAll('[data-sido]'), function (b) {
+        b.onclick = function () { obSido = b.dataset.sido; render(); };
+      });
       [].forEach.call(root.querySelectorAll('[data-city]'), function (b) {
-        b.onclick = function () { S.useCity(b.dataset.city); render(); };
+        b.onclick = function () {
+          var loc = S.useCity(b.dataset.city);
+          if (loc) obSido = (KmaGeo.findByName(loc.name) || {}).sido || obSido;
+          render();
+        };
       });
     }
   }

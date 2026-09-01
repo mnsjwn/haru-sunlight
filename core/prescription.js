@@ -89,12 +89,19 @@ var Prescription = (function () {
       if (nowM >= w.start && nowM < w.end) rx.activeWindow = w;
       else if (nowM < w.start && !rx.nextWindow) rx.nextWindow = w;
     });
-    /* 오늘 남은 창이 없으면 내일 첫 창을 미리 뽑아 둔다 (§9 "내일 아침 창 제시") */
+    /* 오늘 낮(고도 45° 이상) 표본이 아예 없는지.
+       저녁에 조회하면 기상청 발표 특성상 예보가 밤 시간만 남아,
+       "자외선이 약하다"가 아니라 "판정할 낮 자료 자체가 없다"가 된다. */
+    rx.hasDaytimeData = rx.scanned.some(function (p) { return p.altitude >= 45; });
+    rx.isNightNow = sunAltAt(rx, nowM) < 0;
+
+    /* 오늘 남은 창이 없으면 내일을 미리 뽑아 둔다 (§9 "내일 아침 창 제시").
+       내일도 창이 없을 수 있으므로 창 유무와 무관하게 담아 두고, 문구에서 구분한다. */
     rx.tomorrow = null;
     var tk = Engine.dayKey(new Date(here.date.getTime() + 86400000));
     var trx = forDate(weather, loc, profile, tk);
-    if (trx && trx.windows.length) {
-      rx.tomorrow = { rx: trx, window: trx.windows[0] };
+    if (trx) {
+      rx.tomorrow = { rx: trx, window: trx.windows.length ? trx.windows[0] : null };
     }
 
     /* 권장 대상 창: 지금 열린 창 > 다음 창 > 없음 */
@@ -107,6 +114,12 @@ var Prescription = (function () {
       rx.circadian = Engine.circadian(wake, expo);
     }
     return rx;
+  }
+
+  /* 그 처방일의 임의 시각 태양고도 — 표본 격자와 무관하게 정확히 구한다 */
+  function sunAltAt(rx, minute) {
+    var p = rx.dateKey.split('-');
+    return Solar.altitude(+p[0], +p[1], +p[2], minute, rx.loc.lat, rx.loc.lon, rx.tz);
   }
 
   /* 특정 시각의 계산 결과 (10분 격자에서 가장 가까운 표본) */

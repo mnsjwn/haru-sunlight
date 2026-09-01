@@ -62,7 +62,7 @@ var SettingsService = (function () {
     });
   }
   function useCity(name) {
-    var c = WeatherAPI.CITIES.filter(function (x) { return x.name === name; })[0];
+    var c = KmaGeo.findByName(name);
     if (!c) return null;
     var loc = { lat: c.lat, lon: c.lon, name: c.name, precise: false, nx: c.nx, ny: c.ny, areaNo: c.areaNo };
     Repo.setLocation(loc);

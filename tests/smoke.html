@@ -228,17 +228,27 @@ log('        히어로: ' + (m.hero.kicker || m.hero.headline) + ' / ' + (m.hero
 log('        결정자: ' + m.limits.filter(function (l) { return l.win; })[0].name);
 if (m.gap) log('        §5 대체안내: ' + m.gap.title + ' · 주간 ' + m.gap.weeklyPercent + '%');
 
-/* 타이머 — 누적 선량 방식 */
+/* 타이머 — 누적 선량 방식.
+   '지금'을 정오 13:00으로 고정해 검사한다. 실제 시계에 맡기면 밤에 돌릴 때
+   UVI가 0이라 필요시간이 Infinity가 되어 테스트가 시각에 따라 흔들린다. */
+var _realLocalNow = Prescription.localNow;
+Prescription.localNow = function () {
+  return { date: new Date(), minute: 13 * 60, key: dateKey };
+};
+
 TimerService.start(rx, rx.targetWindow);
 var snap = TimerService.tick();
 ok('타이머 시작', TimerService.isRunning() && snap.percent >= 0);
 var before = snap.requiredMin;
 Repo.setProfile({ clothing: 'longLong' });
 var after = TimerService.tick().requiredMin;
-ok('옷차림 변경 시 필요시간 즉시 재계산', Math.abs(after - before) > 0.001,
+ok('옷차림 변경 시 필요시간 즉시 재계산 (13:00 고정 기준)',
+   isFinite(before) && isFinite(after) && Math.abs(after - before) > 0.001,
    before.toFixed(1) + '분 → ' + after.toFixed(1) + '분');
 var fin = TimerService.stop();
 ok('종료 시 이력 기록', Repo.getSessions().length === 1 && fin.minutes >= 1);
+
+Prescription.localNow = _realLocalNow;
 
 var wm = WeeklyService.build(weather, loc, Repo.getProfile());
 ok('주간 뷰모델 생성', wm.bars.length === 7);

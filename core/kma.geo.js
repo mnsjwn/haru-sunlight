@@ -1,8 +1,13 @@
 /* =========================================================
    core / 기상청 좌표계  [백엔드 계층]
    - 위경도 → 단기예보 격자(nx, ny)  : 기상청 DFS Lambert Conformal Conic
-   - 위경도 → 생활기상지수 지점코드(areaNo) : 행정표준코드 최근접 매핑
-   기상청 API는 위경도를 그대로 받지 않으므로 이 변환이 반드시 필요하다.
+   - 지역 목록(시도별 분류) + 생활기상지수 지점코드(areaNo)
+
+   ⚠️ areaNo는 추측하지 않았다. 아래 목록은 전부 기상청 생활기상지수 API로
+      실제 조회해 응답이 오는 것만 남긴 것이다(2026-09 기준 검증).
+      · 강원은 51, 전북은 52 (특별자치도 전환 후 신규 코드)
+      · 광주·전남은 2026-07-01 "전남광주통합특별시"로 통합되어 옛 코드
+        29xx·46xx가 폐지되고 12xx 계열로 재편 → 통합 대표코드 하나만 수록
    ========================================================= */
 var KmaGeo = (function () {
 
@@ -39,35 +44,124 @@ var KmaGeo = (function () {
     };
   }
 
-  /* 대한민국 격자 범위 밖이면 기상청 API를 쓸 수 없다 */
   function inKorea(lat, lon) {
     return lat >= 32 && lat <= 39.5 && lon >= 124 && lon <= 132;
   }
 
-  /* ---------- 지원 도시 ----------
-     nx/ny는 기상청이 배포하는 공식 단기예보 지점 격자값(검증됨).
-     areaNo는 생활기상지수 지점코드(10자리 행정표준코드) — 문서 상 형식대로
-     구성했으나 실서비스키로 1회 대조가 필요하다. 설정 화면에서 확인/수정 가능. */
-  var CITIES = [
-    { name: '서울', lat: 37.5665, lon: 126.9780, nx: 60,  ny: 127, areaNo: '1100000000' },
-    { name: '인천', lat: 37.4563, lon: 126.7052, nx: 55,  ny: 124, areaNo: '2800000000' },
-    { name: '수원', lat: 37.2636, lon: 127.0286, nx: 60,  ny: 121, areaNo: '4111000000' },
-    { name: '춘천', lat: 37.8813, lon: 127.7300, nx: 73,  ny: 134, areaNo: '5111000000' },
-    { name: '강릉', lat: 37.7519, lon: 128.8761, nx: 92,  ny: 131, areaNo: '5115000000' },
-    { name: '대전', lat: 36.3504, lon: 127.3845, nx: 67,  ny: 100, areaNo: '3000000000' },
-    { name: '세종', lat: 36.4800, lon: 127.2890, nx: 66,  ny: 103, areaNo: '3600000000' },
-    { name: '청주', lat: 36.6424, lon: 127.4890, nx: 69,  ny: 106, areaNo: '4311000000' },
-    { name: '안동', lat: 36.5684, lon: 128.7294, nx: 91,  ny: 106, areaNo: '4717000000' },
-    { name: '포항', lat: 36.0190, lon: 129.3435, nx: 102, ny: 94,  areaNo: '4711000000' },
-    { name: '대구', lat: 35.8714, lon: 128.6014, nx: 89,  ny: 90,  areaNo: '2700000000' },
-    { name: '전주', lat: 35.8242, lon: 127.1480, nx: 63,  ny: 89,  areaNo: '5211000000' },
-    { name: '광주', lat: 35.1595, lon: 126.8526, nx: 58,  ny: 74,  areaNo: '2900000000' },
-    { name: '울산', lat: 35.5384, lon: 129.3114, nx: 102, ny: 84,  areaNo: '3100000000' },
-    { name: '창원', lat: 35.2280, lon: 128.6811, nx: 90,  ny: 77,  areaNo: '4812000000' },
-    { name: '부산', lat: 35.1796, lon: 129.0756, nx: 98,  ny: 76,  areaNo: '2600000000' },
-    { name: '여수', lat: 34.7604, lon: 127.6622, nx: 73,  ny: 66,  areaNo: '4613000000' },
-    { name: '제주', lat: 33.4996, lon: 126.5312, nx: 52,  ny: 38,  areaNo: '5011000000' }
+  /* ---------- 지역 목록 (시도 → 지역) ----------
+     nx/ny는 toGrid()로 실행 시 계산한다. 서울처럼 기상청 공식 격자값이
+     알려진 곳은 값이 일치함을 테스트로 고정해 두었다. */
+  var GROUPS = [
+    { sido: '서울', areas: [
+      { name: '서울 전체', lat: 37.5665, lon: 126.9780, areaNo: '1100000000' },
+      { name: '종로구',   lat: 37.5729, lon: 126.9794, areaNo: '1111000000' },
+      { name: '강남구',   lat: 37.5172, lon: 127.0473, areaNo: '1168000000' },
+      { name: '송파구',   lat: 37.5145, lon: 127.1060, areaNo: '1171000000' },
+      { name: '노원구',   lat: 37.6542, lon: 127.0568, areaNo: '1135000000' },
+      { name: '영등포구', lat: 37.5264, lon: 126.8962, areaNo: '1156000000' }
+    ]},
+    { sido: '경기', areas: [
+      { name: '경기 전체',  lat: 37.2750, lon: 127.0095, areaNo: '4100000000' },
+      { name: '수원시',    lat: 37.2636, lon: 127.0286, areaNo: '4111000000' },
+      { name: '성남시',    lat: 37.4200, lon: 127.1265, areaNo: '4113000000' },
+      { name: '고양시',    lat: 37.6584, lon: 126.8320, areaNo: '4128000000' },
+      { name: '용인시',    lat: 37.2411, lon: 127.1776, areaNo: '4146000000' },
+      { name: '부천시',    lat: 37.5035, lon: 126.7660, areaNo: '4119000000' },
+      { name: '안산시',    lat: 37.3219, lon: 126.8309, areaNo: '4127000000' },
+      { name: '안양시',    lat: 37.3943, lon: 126.9568, areaNo: '4117000000' },
+      { name: '남양주시',  lat: 37.6360, lon: 127.2165, areaNo: '4136000000' },
+      { name: '화성시',    lat: 37.1996, lon: 126.8310, areaNo: '4159000000' },
+      { name: '평택시',    lat: 36.9921, lon: 127.1129, areaNo: '4122000000' },
+      { name: '의정부시',  lat: 37.7381, lon: 127.0338, areaNo: '4115000000' },
+      { name: '파주시',    lat: 37.7599, lon: 126.7800, areaNo: '4148000000' }
+    ]},
+    { sido: '인천', areas: [
+      { name: '인천 전체', lat: 37.4563, lon: 126.7052, areaNo: '2800000000' },
+      { name: '연수구',   lat: 37.4103, lon: 126.6784, areaNo: '2818500000' },
+      { name: '강화군',   lat: 37.7469, lon: 126.4878, areaNo: '2871000000' }
+    ]},
+    { sido: '강원', areas: [
+      { name: '강원 전체', lat: 37.8854, lon: 127.7300, areaNo: '5100000000' },
+      { name: '춘천시',   lat: 37.8813, lon: 127.7300, areaNo: '5111000000' },
+      { name: '원주시',   lat: 37.3422, lon: 127.9202, areaNo: '5113000000' },
+      { name: '강릉시',   lat: 37.7519, lon: 128.8761, areaNo: '5115000000' },
+      { name: '속초시',   lat: 38.2070, lon: 128.5918, areaNo: '5121000000' },
+      { name: '동해시',   lat: 37.5247, lon: 129.1143, areaNo: '5117000000' }
+    ]},
+    { sido: '대전', areas: [
+      { name: '대전 전체', lat: 36.3504, lon: 127.3845, areaNo: '3000000000' }
+    ]},
+    { sido: '세종', areas: [
+      { name: '세종 전체', lat: 36.4800, lon: 127.2890, areaNo: '3600000000' }
+    ]},
+    { sido: '충북', areas: [
+      { name: '충북 전체', lat: 36.6357, lon: 127.4917, areaNo: '4300000000' },
+      { name: '청주시',   lat: 36.6424, lon: 127.4890, areaNo: '4311000000' },
+      { name: '충주시',   lat: 36.9910, lon: 127.9259, areaNo: '4313000000' },
+      { name: '제천시',   lat: 37.1326, lon: 128.1910, areaNo: '4315000000' }
+    ]},
+    { sido: '충남', areas: [
+      { name: '충남 전체', lat: 36.6588, lon: 126.6728, areaNo: '4400000000' },
+      { name: '천안시',   lat: 36.8151, lon: 127.1139, areaNo: '4413000000' },
+      { name: '아산시',   lat: 36.7898, lon: 127.0018, areaNo: '4420000000' },
+      { name: '서산시',   lat: 36.7848, lon: 126.4503, areaNo: '4421000000' },
+      { name: '공주시',   lat: 36.4465, lon: 127.1190, areaNo: '4415000000' }
+    ]},
+    { sido: '전북', areas: [
+      { name: '전북 전체', lat: 35.8203, lon: 127.1088, areaNo: '5200000000' },
+      { name: '전주시',   lat: 35.8242, lon: 127.1480, areaNo: '5211000000' },
+      { name: '익산시',   lat: 35.9483, lon: 126.9576, areaNo: '5214000000' },
+      { name: '군산시',   lat: 35.9676, lon: 126.7369, areaNo: '5213000000' }
+    ]},
+    { sido: '광주·전남', areas: [
+      /* 2026-07-01 전남광주통합특별시 출범으로 코드 재편. 통합 대표코드만 검증됨.
+         하위 시군구 코드(12110~12870)는 이름 매핑이 확인되지 않아 넣지 않았다. */
+      { name: '광주·전남 전체', lat: 35.1595, lon: 126.8526, areaNo: '1200000000' }
+    ]},
+    { sido: '대구', areas: [
+      { name: '대구 전체', lat: 35.8714, lon: 128.6014, areaNo: '2700000000' },
+      { name: '수성구',   lat: 35.8583, lon: 128.6311, areaNo: '2726000000' }
+    ]},
+    { sido: '경북', areas: [
+      { name: '경북 전체', lat: 36.5760, lon: 128.5056, areaNo: '4700000000' },
+      { name: '포항시',   lat: 36.0190, lon: 129.3435, areaNo: '4711000000' },
+      { name: '경주시',   lat: 35.8562, lon: 129.2247, areaNo: '4713000000' },
+      { name: '안동시',   lat: 36.5684, lon: 128.7294, areaNo: '4717000000' },
+      { name: '구미시',   lat: 36.1196, lon: 128.3446, areaNo: '4719000000' }
+    ]},
+    { sido: '부산', areas: [
+      { name: '부산 전체', lat: 35.1796, lon: 129.0756, areaNo: '2600000000' },
+      { name: '해운대구', lat: 35.1631, lon: 129.1636, areaNo: '2635000000' },
+      { name: '사하구',   lat: 35.1046, lon: 128.9748, areaNo: '2638000000' }
+    ]},
+    { sido: '울산', areas: [
+      { name: '울산 전체', lat: 35.5384, lon: 129.3114, areaNo: '3100000000' }
+    ]},
+    { sido: '경남', areas: [
+      { name: '경남 전체', lat: 35.2372, lon: 128.6924, areaNo: '4800000000' },
+      { name: '창원시',   lat: 35.2280, lon: 128.6811, areaNo: '4812000000' },
+      { name: '진주시',   lat: 35.1800, lon: 128.1076, areaNo: '4817000000' },
+      { name: '김해시',   lat: 35.2286, lon: 128.8894, areaNo: '4825000000' },
+      { name: '양산시',   lat: 35.3350, lon: 129.0378, areaNo: '4833000000' }
+    ]},
+    { sido: '제주', areas: [
+      { name: '제주 전체',  lat: 33.4996, lon: 126.5312, areaNo: '5000000000' },
+      { name: '제주시',    lat: 33.4996, lon: 126.5312, areaNo: '5011000000' },
+      { name: '서귀포시',  lat: 33.2542, lon: 126.5600, areaNo: '5013000000' }
+    ]}
   ];
+
+  /* 평평한 목록 — 최근접 탐색·기존 호출부 호환용. 격자는 여기서 계산해 붙인다. */
+  var CITIES = [];
+  GROUPS.forEach(function (g) {
+    g.areas.forEach(function (a) {
+      var grid = toGrid(a.lat, a.lon);
+      CITIES.push({
+        sido: g.sido, name: a.name, lat: a.lat, lon: a.lon,
+        areaNo: a.areaNo, nx: grid.nx, ny: grid.ny
+      });
+    });
+  });
 
   function nearestCity(lat, lon) {
     var best = CITIES[0], bd = Infinity;
@@ -78,5 +172,13 @@ var KmaGeo = (function () {
     return best;
   }
 
-  return { toGrid: toGrid, inKorea: inKorea, CITIES: CITIES, nearestCity: nearestCity };
+  function findByName(name) {
+    return CITIES.filter(function (c) { return c.name === name; })[0] || null;
+  }
+
+  return {
+    toGrid: toGrid, inKorea: inKorea,
+    GROUPS: GROUPS, CITIES: CITIES,
+    nearestCity: nearestCity, findByName: findByName
+  };
 })();

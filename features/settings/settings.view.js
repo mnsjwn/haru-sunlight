@@ -4,6 +4,7 @@
 var SettingsView = (function () {
 
   var el;
+  var openSido = null;   // 지역 선택에서 펼쳐 둔 시·도
 
   function render() {
     var m = SettingsService.model();
@@ -72,25 +73,20 @@ var SettingsView = (function () {
             : '설정되지 않음') +
         '</div></div>' +
         '<button class="btn btn-sub" id="s-geo">📍 현재 위치로 다시 잡기</button>' +
-        '<div class="ob-city" id="s-city">' +
-          WeatherAPI.CITIES.map(function (c) {
-            var on = m.location && !m.location.precise && m.location.name === c.name;
-            return '<button data-city="' + c.name + '"' + (on ? ' class="on"' : '') + '>' + c.name + '</button>';
-          }).join('') +
-        '</div>' +
+        regionPicker(m) +
       '</div>' +
 
       '<div class="sep"></div>' +
       '<div class="sec">' +
         '<div class="sec-title">데이터</div>' +
-        '<div class="sec-desc">예보 캐시 ' + m.cacheText + ' · 하루 1회만 호출합니다.</div>' +
+        '<div class="sec-desc">예보 캐시 ' + m.cacheText + ' · 1시간마다 자동으로 새로 받습니다.</div>' +
         '<button class="btn btn-sub" id="s-recache" style="margin-bottom:8px">예보 새로 받기</button>' +
         '<button class="btn btn-sub" id="s-reset" style="color:#F04452">전체 초기화</button>' +
       '</div>' +
 
       '<div class="sec" style="padding-top:0">' +
         '<div class="card"><div class="card-t">일광 처방</div><div class="card-b">' +
-          '백엔드 없음 · 모든 계산은 이 기기에서. 기상 데이터만 기상청에서 하루 1회 받아옵니다.<br>' +
+          '백엔드 없음 · 모든 계산은 이 기기에서. 기상 데이터만 기상청에서 1시간마다 받아옵니다.<br>' +
           '태양고도 NOAA SPA · 체감온도 NOAA Heat Index · 섭취기준 보건복지부(2020)' +
         '</div></div>' +
       '</div>';
@@ -124,6 +120,32 @@ var SettingsView = (function () {
               '3. 페이지 새로고침' +
             '</dd>' +
           '</dl>') +
+    '</div>';
+  }
+
+  /* 지역 선택 — 시도를 먼저 고르고 그 안의 지역을 고른다.
+     지역마다 기상청 지점코드(areaNo)가 달라 자외선지수도 그 지역 값으로 바뀐다. */
+  function regionPicker(m) {
+    var cur = m.location ? KmaGeo.findByName(m.location.name) : null;
+    var curSido = openSido || (cur ? cur.sido : (KmaGeo.GROUPS[0] || {}).sido);
+    var group = KmaGeo.GROUPS.filter(function (g) { return g.sido === curSido; })[0] || KmaGeo.GROUPS[0];
+
+    return '<div style="margin-top:14px">' +
+      '<div style="font-size:12.5px;font-weight:700;color:#6B7684;margin-bottom:7px">시 · 도</div>' +
+      '<div class="ob-city" id="s-sido">' +
+        KmaGeo.GROUPS.map(function (g) {
+          return '<button data-sido="' + g.sido + '"' + (g.sido === curSido ? ' class="on"' : '') +
+                 '>' + g.sido + '</button>';
+        }).join('') +
+      '</div>' +
+      '<div style="font-size:12.5px;font-weight:700;color:#6B7684;margin:16px 0 7px">' +
+        group.sido + ' 지역 <span style="font-weight:500;color:#B0B8C1">· ' + group.areas.length + '곳</span></div>' +
+      '<div class="ob-city" id="s-city">' +
+        group.areas.map(function (a) {
+          var on = m.location && m.location.name === a.name;
+          return '<button data-city="' + a.name + '"' + (on ? ' class="on"' : '') + '>' + a.name + '</button>';
+        }).join('') +
+      '</div>' +
     '</div>';
   }
 
@@ -187,11 +209,16 @@ var SettingsView = (function () {
         .then(function () { App.refresh(true); UI.toast('위치를 갱신했어요'); })
         .catch(function () { UI.toast('권한이 없어요. 아래에서 도시를 골라 주세요'); });
     };
+    [].forEach.call(el.querySelectorAll('#s-sido button'), function (b) {
+      b.onclick = function () { openSido = b.dataset.sido; render(); };
+    });
     [].forEach.call(el.querySelectorAll('#s-city button'), function (b) {
       b.onclick = function () {
-        SettingsService.useCity(b.dataset.city);
-        App.refresh(true);
+        var loc = SettingsService.useCity(b.dataset.city);
+        if (loc) openSido = (KmaGeo.findByName(loc.name) || {}).sido || openSido;
+        App.refresh(true);          // 지역이 바뀌면 그 지역 자외선지수로 즉시 다시 받는다
         UI.toast(b.dataset.city + '(으)로 바꿨어요');
+        render();
       };
     });
 

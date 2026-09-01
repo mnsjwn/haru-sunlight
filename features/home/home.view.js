@@ -41,7 +41,7 @@ var HomeView = (function () {
           '<em>· ' + dateShort + '</em></button>' +
         '<button class="top-refresh" id="h-refresh">' + UI.ICON.refresh + '</button>' +
       '</div>' +
-      '<div class="top-mode mode-' + m.mode.id + '"><span class="dot"></span>' + m.mode.label + ' 모드</div>' +
+      '<div class="top-mode mode-' + m.mode.id + '"><span class="dot"></span>' + m.modeLabel + ' 모드</div>' +
       main +
       '<div class="top-why">' + h.why + '</div>' +
       weatherLine(m, h) +

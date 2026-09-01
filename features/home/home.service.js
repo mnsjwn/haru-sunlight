@@ -32,6 +32,9 @@ var HomeService = (function () {
       dateText: UI.dateKo(rx.date),
       stale: !!opts.stale,
       mode: rx.mode,
+      modeLabel: rx.hasDaytimeData === false
+        ? (rx.isNightNow ? '야간' : '낮 자료 없음')
+        : rx.mode.label,
       hero: hero(rx),
       limits: limits(referencePoint(rx), rx),
       windows: windowRows(rx),
@@ -84,24 +87,44 @@ var HomeService = (function () {
       };
     }
     /* 창이 하나도 없을 때 — "오늘은 무리"라고 말하는 것도 기능 (§9)
-       창은 있었지만 이미 지나간 날은 따로 구분해서 말해 준다 */
+       다만 이유를 정확히 구분해야 한다:
+         ① 창은 있었는데 이미 지나감
+         ② 오늘 낮 자료 자체가 없음 (저녁 조회 — 기상청 발표가 밤 시간부터 시작)
+         ③ 진짜로 날씨 때문에 창이 없음 (§4 모드) */
     var passed = rx.windows.length > 0;
+    var noDaytime = rx.hasDaytimeData === false;
+
     return {
       kicker: null,
       minutes: null,
       passed: passed,
-      headline: passed ? '오늘 창은 이미 지났어요' : rx.mode.headline,
+      noDaytime: noDaytime,
+      headline: passed ? '오늘 창은 이미 지났어요'
+              : noDaytime ? (rx.isNightNow ? '오늘은 해가 졌어요' : '오늘 낮 예보가 없어요')
+              : rx.mode.headline,
       why: passed
         ? '마지막 창이 ' + UI.hm(rx.windows[rx.windows.length - 1].end) + '에 닫혔습니다'
+        : noDaytime
+        ? (rx.isNightNow
+            ? '일몰 뒤에는 UVB가 도달하지 않습니다 · 기상청 예보도 밤 시간만 남았어요'
+            : '기상청 발표 시각 기준으로 오늘 낮 자료가 아직 없어요')
         : rx.mode.reason,
-      when: rx.tomorrow
-        ? '내일은 ' + UI.hmk(rx.tomorrow.window.recommendStart) + '부터 ' +
-          rx.tomorrow.window.recommendMinutes + '분 창이 열려요'
-        : '내일 아침에 다시 확인해 주세요',
+      when: tomorrowText(rx),
       cta: null,
       sub: null,
       state: 'closed'
     };
+  }
+
+  /* 내일 안내 — 창이 없는 날도 그 사실을 말해 준다 */
+  function tomorrowText(rx) {
+    if (!rx.tomorrow) return '내일 아침에 다시 확인해 주세요';
+    var t = rx.tomorrow;
+    if (t.window) {
+      return '내일은 ' + UI.hmk(t.window.recommendStart) + '부터 ' +
+             t.window.recommendMinutes + '분 창이 열려요';
+    }
+    return '내일도 창이 없어요 · ' + t.rx.mode.label + ' 예보';
   }
 
   /* 상단 날씨 한 줄 — 카드나 칩 없이 조용히 붙는다 */
@@ -177,7 +200,8 @@ var HomeService = (function () {
     var miss = Engine.consecutiveMissDays(daily, false);
     var supplement = rx.profile.supplement;
     return {
-      title: rx.mode.label + ' · ' + (miss > 1 ? miss + '일 연속 노출 창 없음' : '오늘은 노출 창 없음'),
+      title: (rx.hasDaytimeData === false ? (rx.isNightNow ? '야간' : '낮 자료 없음') : rx.mode.label) +
+             ' · ' + (miss > 1 ? miss + '일 연속 노출 창 없음' : '오늘은 노출 창 없음'),
       missDays: miss,
       weeklyPercent: weekly.percent,
       foods: FOODS,
@@ -185,7 +209,11 @@ var HomeService = (function () {
       showSupplementWarning: supplement,
       supplementWarning: '보충제를 드시는 중이라고 하셨어요. ' +
         '햇빛으로 만든 양과 보충제 섭취량은 합산해서 상한(4,000 IU/일)을 넘지 않아야 합니다.',
-      note: rx.mode.id === 'winter'
+      note: rx.hasDaytimeData === false
+        ? (rx.isNightNow
+            ? '해가 진 뒤라 오늘 채울 수 있는 몫은 끝났습니다. 그날 못 채운 만큼은 아래로 보완하세요.'
+            : '기상청 발표 시각 기준으로 오늘 낮 예보가 아직 없습니다. 아침에 다시 확인해 주세요.')
+        : rx.mode.id === 'winter'
         ? '겨울에는 태양고도가 낮아 UVB가 대기를 통과하지 못합니다. 이 기간에는 합성 자체가 되지 않아요.'
         : rx.mode.id === 'heat'
         ? '오늘 최고 체감온도가 ' + rx.maxHeatIndexC.toFixed(0) + '℃까지 올라 열 안전 상한에 걸렸습니다. 자외선이 없는 게 아니라 더위 때문에 창을 닫았어요.'

@@ -53,6 +53,7 @@ var App = (function () {
         invalidate();
         if (state.profile.notify) Notify.schedule(prescription());
         go(state.tab);
+        scheduleHourly();
       })
       .catch(function (err) {
         state.loading = false;
@@ -192,14 +193,29 @@ var App = (function () {
     if (s) s.onclick = function () { go('settings'); };
   }
 
+  /* ---------- 매시 정각 자동 갱신 ----------
+     시간이 흐르면 '지금'의 자외선지수·기온이 달라지므로 1시간마다 다시 받아
+     화면을 새로 계산한다. 정각에 맞춰 첫 틱을 걸고 이후 1시간 간격. */
+  var hourlyTimer = null;
+  function scheduleHourly() {
+    if (hourlyTimer) clearTimeout(hourlyTimer);
+    var now = new Date();
+    var msToNextHour = (60 - now.getMinutes()) * 60000 - now.getSeconds() * 1000;
+    if (msToNextHour < 5000) msToNextHour += 3600000;
+    hourlyTimer = setTimeout(function () {
+      refresh(false);          // TTL(1시간) 지났으면 실제 재조회, 아니면 캐시로 재계산
+      scheduleHourly();
+    }, msToNextHour);
+  }
+
   /* ---------- 생명주기 ---------- */
   var bootedDay = Engine.dayKey(new Date());
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) return;
     var today = Engine.dayKey(new Date());
     if (today !== bootedDay) { bootedDay = today; boot(); return; }   // 자정 넘김
-    invalidate();
-    refreshView();
+    refresh(false);            // 돌아왔을 때 캐시가 1시간 넘었으면 새로 받는다
+    scheduleHourly();
   });
 
   return {
