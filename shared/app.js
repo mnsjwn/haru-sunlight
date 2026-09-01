@@ -245,6 +245,20 @@ var App = (function () {
 document.addEventListener('DOMContentLoaded', function () {
   App.init();
   if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
-    navigator.serviceWorker.register('sw.js').catch(function () {});
+    navigator.serviceWorker.register('sw.js').then(function (reg) {
+      reg.update();                       // 새 sw.js가 있으면 즉시 받아온다
+      /* 새 워커가 대기 상태로 멈춰 있으면 바로 넘겨받게 한다 —
+         안 그러면 코드를 고쳐도 옛 캐시가 계속 나온다 */
+      if (reg.waiting) reg.waiting.postMessage('skipWaiting');
+      reg.addEventListener('updatefound', function () {
+        var nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', function () {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            location.reload();            // 새 버전 적용 후 한 번 새로고침
+          }
+        });
+      });
+    }).catch(function () {});
   }
 });
