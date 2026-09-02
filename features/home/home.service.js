@@ -68,7 +68,7 @@ var HomeService = (function () {
         kicker: '지금 나가면',
         minutes: Math.max(1, Math.round(p.minutes)),
         why: whyText(p),
-        when: '이 창은 ' + UI.hm(rx.activeWindow.end) + '까지 열려 있어요',
+        when: UI.hm(rx.activeWindow.end) + '까지',
         cta: { label: '타이머 시작', action: 'timer', primary: true },
         sub: null,
         state: 'open'
@@ -79,8 +79,7 @@ var HomeService = (function () {
         kicker: UI.hmk(t.recommendStart) + '부터',
         minutes: t.recommendMinutes,
         why: whyText(t.best),
-        when: '창 ' + UI.hm(t.start) + ' ~ ' + UI.hm(t.end) + ' · ' +
-              Math.round(t.spanMinutes / 60 * 10) / 10 + '시간 열려요',
+        when: UI.hm(t.start) + '–' + UI.hm(t.end),
         cta: { label: Notify.granted() ? '알림 예약됨' : '15분 전에 알려주기', action: 'notify', primary: true },
         sub: { label: '그래도 지금 나갈래요', action: 'timer' },
         state: 'waiting'
@@ -137,14 +136,12 @@ var HomeService = (function () {
     };
   }
 
+  /* 무엇이 시간을 정했는지 — 한 줄로 짧게.
+     자세한 근거는 아래 "무엇이 이 시간을 정했나" 섹션이 따로 보여 준다. */
   function whyText(p) {
     var name = { vitd: '비타민D 필요량', burn: '화상 한계', heat: '열 안전 상한' }[p.limitedBy];
-    var tail = {
-      vitd: '이 시간을 정했어요 · UVI ' + p.uvi.toFixed(1) + '에서 필요한 최소 시간',
-      burn: '이 시간을 정했어요 · 더 있으면 화상 위험',
-      heat: '이 시간을 정했어요 · 체감 ' + p.heatIndexC.toFixed(0) + '℃'
-    }[p.limitedBy];
-    return '<b>' + name + '</b>이 ' + tail;
+    var josa = p.limitedBy === 'burn' ? '가' : '이';
+    return '<b>' + name + '</b>' + josa + ' 정했어요';
   }
 
   /* 세 제약 breakdown — 무엇이 결정했는지가 이 앱의 핵심 (§2)

@@ -48,22 +48,19 @@ var HomeView = (function () {
     '</div>';
   }
 
-  /* 상단 날씨 — 칩·카드 없이 한 줄. UVI · 기온 · 체감 · 창 안내 */
+  /* 상단 날씨 — 한 줄, 최소한만. 창 시간 → UVI → 기온 순.
+     체감온도는 기온과 2℃ 넘게 벌어질 때만 (평소엔 군더더기) */
   function weatherLine(m, h) {
     var w = m.weatherNow;
     var bits = [];
-    if (w) {
-      bits.push('UVI <b>' + w.uvi + '</b>');
-      bits.push('<b>' + w.tempC + '</b>');
-      if (w.feels !== w.tempC) bits.push('체감 <b>' + w.feels + '</b>');
-    }
     if (h.when) bits.push(h.when);
+    if (w) {
+      bits.push('UVI ' + w.uvi);
+      var t = parseInt(w.tempC, 10), f = parseInt(w.feels, 10);
+      bits.push(Math.abs(f - t) >= 2 ? w.tempC + ' (체감 ' + w.feels + ')' : w.tempC);
+    }
     if (!bits.length) return '';
-    return '<div class="top-meta">' +
-      bits.map(function (b, i) {
-        return (i ? '<span class="div">·</span>' : '') + '<i>' + b + '</i>';
-      }).join('') +
-    '</div>';
+    return '<div class="top-meta">' + bits.join('<span class="div">·</span>') + '</div>';
   }
 
   function cta(m) {
@@ -75,7 +72,7 @@ var HomeView = (function () {
     }
     var main = '<button class="btn btn-primary" id="h-cta">' +
         (h.cta.action === 'timer' ? UI.ICON.play : UI.ICON.bell) + h.cta.label + '</button>';
-    var sub = h.sub ? '<button class="btn btn-sub" id="h-cta-sub" style="margin-top:8px">' + h.sub.label + '</button>' : '';
+    var sub = h.sub ? '<button class="btn-text" id="h-cta-sub">' + h.sub.label + '</button>' : '';
     return '<div class="btn-wrap">' + main + sub + '</div>';
   }
 

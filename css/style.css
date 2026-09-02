@@ -50,7 +50,7 @@ svg { display:block; flex:none; }
 @keyframes fadeUp { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
 
 /* ---------- 상단 (미니멀) ---------- */
-.top { padding:18px 20px 24px; }
+.top { padding:18px 20px 22px; }
 .top-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
 .top-place { display:flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--g700); }
 .top-place svg { width:14px; height:14px; color:var(--g400); }
@@ -64,29 +64,28 @@ svg { display:block; flex:none; }
 @keyframes spin { to { transform:rotate(360deg); } }
 
 .top-mode { display:flex; align-items:center; gap:5px; font-size:12.5px; font-weight:700;
-  letter-spacing:-.2px; margin-bottom:9px; }
+  letter-spacing:-.2px; margin-bottom:12px; }
 .top-mode .dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
 .mode-normal { color:var(--blue); }
 .mode-heat   { color:#C26A00; }
 .mode-cloudy { color:var(--g500); }
 .mode-winter { color:#4F46E5; }
 
-.top-kicker { font-size:14.5px; font-weight:600; color:var(--g600); margin-bottom:1px; }
+.top-kicker { font-size:14px; font-weight:600; color:var(--g500); margin-bottom:2px; }
 .top-num { display:flex; align-items:baseline; gap:3px; }
-.top-num b { font-size:64px; font-weight:800; letter-spacing:-3.5px; line-height:1.08; }
+.top-num b { font-size:64px; font-weight:800; letter-spacing:-3.5px; line-height:1.05; }
 .top-num span { font-size:24px; font-weight:700; letter-spacing:-.8px; }
 .top-headline { font-size:25px; font-weight:700; letter-spacing:-.8px; line-height:1.36; }
 
-.top-why { margin-top:11px; font-size:14.5px; font-weight:500; color:var(--g700);
-  line-height:1.55; letter-spacing:-.2px; }
+/* 무엇이 정했는지 — 한 줄 */
+.top-why { margin-top:8px; font-size:14.5px; font-weight:500; color:var(--g600);
+  letter-spacing:-.2px; }
 .top-why b { color:var(--blue); font-weight:700; }
 
-/* 상단 날씨 — 칩·카드 없이 조용한 한 줄 */
-.top-meta { margin-top:13px; display:flex; align-items:center; flex-wrap:wrap; gap:0 9px;
-  font-size:12.5px; font-weight:500; color:var(--g500); }
-.top-meta i { font-style:normal; }
-.top-meta b { color:var(--g700); font-weight:600; }
-.top-meta .div { color:var(--g300); }
+/* 날씨 — 칩·카드 없이 조용한 한 줄 */
+.top-meta { margin-top:7px; font-size:12.5px; font-weight:500; color:var(--g400);
+  letter-spacing:-.1px; }
+.top-meta .div { color:var(--g300); margin:0 6px; }
 
 /* ---------- 섹션 구분 (토스 시그니처 8px 블록) ---------- */
 .sep { height:8px; background:var(--g100); }
@@ -113,6 +112,10 @@ svg { display:block; flex:none; }
 .btn:disabled { background:var(--g100); color:var(--g400); transform:none; }
 .btn-row { display:flex; gap:8px; padding:0 20px; }
 .btn-wrap { padding:4px 20px 0; }
+/* 보조 동작 — 채운 버튼 대신 텍스트만 (시각 무게를 낮춘다) */
+.btn-text { width:100%; padding:14px 0 2px; font-size:14.5px; font-weight:600;
+  color:var(--g500); letter-spacing:-.3px; }
+.btn-text:active { color:var(--g700); }
 
 /* ---------- 제약 breakdown ---------- */
 .limits { display:flex; flex-direction:column; gap:8px; }
