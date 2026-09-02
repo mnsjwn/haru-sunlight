@@ -62,17 +62,21 @@ var App = (function () {
       });
   }
 
+  /* 예보 다시 받기. 호출부가 성공/실패를 알 수 있도록 Promise를 돌려준다
+     (새로고침 버튼이 회전 표시를 끄고 결과 토스트를 띄우는 데 쓴다) */
   function refresh(force) {
-    if (!state.location) return;
+    if (!state.location) return Promise.resolve(null);
     state.location = Repo.getLocation();
-    WeatherAPI.load(state.location, !!force).then(function (res) {
+    return WeatherAPI.load(state.location, !!force).then(function (res) {
       state.weather = res.data;
       state.stale = res.stale;
       invalidate();
       if (state.profile.notify) Notify.schedule(prescription());
       refreshView();
+      return res;
     }).catch(function (e) {
       UI.toast(e && e.noKey ? '기상청 서비스키가 없어요 — config.local.js를 확인해 주세요' : '예보를 받지 못했어요');
+      throw e;
     });
   }
 

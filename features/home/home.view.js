@@ -217,7 +217,32 @@ var HomeView = (function () {
   function bind(m) {
     var q = function (id) { return document.getElementById(id); };
 
-    if (q('h-refresh')) q('h-refresh').onclick = function () { App.refresh(true); };
+    /* 새로고침 — 기상청에서 날씨·자외선지수를 지금 다시 받아온다.
+       받는 동안 아이콘을 돌리고, 끝나면 언제 기준 자료인지 토스트로 알려 준다. */
+    if (q('h-refresh')) q('h-refresh').onclick = function () {
+      var btn = this;
+      if (btn.dataset.busy === '1') return;        // 연타 방지
+      btn.dataset.busy = '1';
+      btn.classList.add('spinning');
+
+      App.refresh(true).then(function (res) {
+        if (!res) return;
+        if (res.stale) {
+          UI.toast('기상청에서 새 자료를 못 받아 저장된 예보로 보여드려요');
+          return;
+        }
+        var t = new Date(res.data.fetchedAt);
+        var uv = res.data.uvMissing ? '자외선지수 누락' : '자외선지수 반영';
+        UI.toast('최신 예보로 새로고침했어요 · ' +
+                 UI.hm(t.getHours() * 60 + t.getMinutes()) + ' 기준 · ' + uv);
+      }).catch(function () {
+        /* 실패 토스트는 App.refresh가 이미 띄운다 */
+      }).then(function () {
+        /* 화면이 다시 그려지면 이 버튼은 사라지지만, 안 그려진 경우를 대비해 되돌린다 */
+        var cur = document.getElementById('h-refresh');
+        if (cur) { cur.classList.remove('spinning'); cur.dataset.busy = ''; }
+      });
+    };
     if (q('h-loc')) q('h-loc').onclick = function () { App.go('settings'); };
 
     if (q('h-cta')) q('h-cta').onclick = function () {
