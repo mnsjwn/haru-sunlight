@@ -215,6 +215,34 @@ svg { display:block; flex:none; }
 .official dd b { font-weight:700; color:var(--g900); }
 .official .src { font-size:11px; color:var(--g500); margin-top:8px; line-height:1.45; }
 
+/* ---------- 다른 탭으로 가는 안내 행 (홈을 짧게 유지) ---------- */
+.more-row {
+  width:100%; display:flex; align-items:center; gap:13px;
+  padding:16px 16px; border-radius:14px; background:var(--g50);
+  text-align:left; transition:.15s var(--ease);
+}
+.more-row:active { background:var(--g100); transform:scale(.99); }
+.more-ico {
+  width:38px; height:38px; border-radius:11px; flex:none; background:var(--white);
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+}
+.more-body { flex:1; min-width:0; }
+.more-t { font-size:15px; font-weight:700; letter-spacing:-.3px; }
+.more-d { font-size:12.5px; color:var(--g500); margin-top:3px; font-weight:500; }
+.more-row svg { width:18px; height:18px; color:var(--g400); flex:none; }
+
+/* ---------- 마이페이지 헤더 ---------- */
+.my-head { display:flex; align-items:center; gap:15px; padding:26px 20px 22px; }
+.my-ava {
+  width:54px; height:54px; border-radius:18px; flex:none;
+  background:linear-gradient(150deg,#4B95FF,#2C6EE8);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 6px 14px rgba(44,110,232,.28);
+}
+.my-ava svg { width:27px; height:27px; }
+.my-t { font-size:24px; font-weight:800; letter-spacing:-.7px; }
+.my-d { margin-top:5px; font-size:13px; font-weight:600; color:var(--g500); letter-spacing:-.2px; }
+
 /* ---------- 리스트 행 ---------- */
 .row {
   display:flex; align-items:center; gap:12px; padding:16px 20px;

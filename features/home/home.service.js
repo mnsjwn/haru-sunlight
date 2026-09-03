@@ -46,6 +46,7 @@ var HomeService = (function () {
       circadian: circadianCard(rx),
       weatherNow: weatherNow(referencePoint(rx)),
       sun: { rise: timePart(rx.sunrise), set: timePart(rx.sunset) },
+      skinLabel: 'ⅠⅡⅢⅣⅤⅥ'[(rx.profile.skinType || 3) - 1],
       solarNoonText: UI.hm(rx.solarNoon),
       maxAltText: rx.maxAltitude.toFixed(0) + '°'
     };

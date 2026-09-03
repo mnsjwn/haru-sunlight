@@ -53,7 +53,24 @@ var WeeklyService = (function () {
 
     var missDays = Engine.consecutiveMissDays(daily, (daily[today] || 0) > 0);
 
+    /* 홈에서 옮겨 온 상세 — 오늘 처방 기준 그래프·생체리듬·대체 수단 */
+    var rxToday = (weather && loc) ? Prescription.forToday(weather, loc, profile) : null;
+    var detail = null;
+    if (rxToday) {
+      var hm = HomeService.build(rxToday, {});
+      detail = {
+        chart: hm.chart,
+        sun: hm.sun,
+        solarNoonText: hm.solarNoonText,
+        maxAltText: hm.maxAltText,
+        circadian: hm.circadian,
+        gap: hm.gap,
+        modeLabel: hm.modeLabel
+      };
+    }
+
     return {
+      detail: detail,
       weeklyPercent: weekly.percent,
       bars: bars,
       bodyStore: Math.round(Engine.bodyStore(daily)),

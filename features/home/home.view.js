@@ -7,17 +7,16 @@ var HomeView = (function () {
 
   function render(m) {
     el = document.getElementById('screen-home');
+    /* 홈은 '오늘 몇 분'에만 집중한다.
+       시간별 그래프·주간 충전률·생체리듬은 주간 탭, 프로필·알림은 마이페이지로 옮겼다. */
     el.innerHTML =
       top(m) +
       (m.stale ? '<div class="stale">⚠️ 네트워크 연결이 안 돼 저장된 예보로 계산했어요</div>' : '') +
       cta(m) +
       sep() + limitsSec(m) +
       (m.windows.length ? sep() + windowsSec(m) : '') +
-      sep() + chartSec(m) +
-      (m.gap ? sep() + gapSec(m) : '') +
-      sep() + weeklySec(m) +
-      (m.circadian ? sep() + circadianSec(m) : '') +
-      sep() + evidenceSec(m);
+      (m.gap ? sep() + gapBriefSec(m) : '') +
+      sep() + moreSec(m);
     bind(m);
   }
 
@@ -112,56 +111,17 @@ var HomeView = (function () {
       '</div></div>';
   }
 
-  function chartSec(m) {
-    return '<div class="sec">' +
-      '<div class="sec-title">시간별 자외선 · 기온</div>' +
-      '<div class="sec-desc">파란 띠가 나갈 수 있는 구간입니다.</div>' +
-      '<div class="chart-wrap">' +
-        '<div class="chart-legend">' +
-          '<i><b style="background:#3182F6"></b>자외선</i>' +
-          '<i><b style="background:#FF9500"></b>기온</i>' +
-        '</div>' + m.chart +
-      '</div>' +
-      '<div class="sun-line">' +
-        '<span>일출 <b>' + m.sun.rise + '</b> · 일몰 <b>' + m.sun.set + '</b></span>' +
-        '<span>남중 <b>' + m.solarNoonText + '</b> · 최대고도 <b>' + m.maxAltText + '</b></span>' +
-      '</div>' +
-    '</div>';
-  }
-
-  /* §5 장마 · 흐림 / 겨울 — 대체 수단 */
-  function gapSec(m) {
+  function gapBriefSec(m) {
     var g = m.gap;
-    return '<div class="sec" id="gap-sec">' +
+    return '<div class="sec">' +
       '<div class="sec-title">' + g.title + '</div>' +
       '<div class="sec-desc">' + g.note + '</div>' +
-
-      '<div class="gauge" style="margin-bottom:8px">' +
-        '<div class="gauge-top"><div style="font-size:13px;font-weight:600;color:#6B7684">이번 주 충전률</div>' +
-          '<div class="gauge-num">' + g.weeklyPercent + '<small>%</small></div></div>' +
-        '<div class="gauge-bar"><div class="gauge-fill" style="width:' + Math.min(100, g.weeklyPercent) + '%"></div></div>' +
-      '</div>' +
-
       '<div class="card">' +
-        '<div class="card-t">🍽️ 식이 대체</div>' +
-        '<div class="card-b">햇빛으로 못 만든 만큼은 음식에서 채울 수 있습니다.</div>' +
+        '<div class="card-t">🍽️ 햇빛 대신 채우려면</div>' +
         '<div class="food">' + g.foods.map(function (f) {
           return '<div class="food-i"><em>' + f.emoji + '</em><span>' + f.name + '</span></div>';
         }).join('') + '</div>' +
       '</div>' +
-
-      '<div class="card">' +
-        '<div class="card-t">💊 보충제를 고려할 구간입니다</div>' +
-        '<div class="card-b">저희가 용량을 정해 드리지는 않습니다. 공식 기준만 그대로 옮깁니다.</div>' +
-        '<dl class="official">' +
-          '<dt>비타민D 섭취 기준</dt>' +
-          g.official.rows.map(function (r) {
-            return '<dd><span>' + r.k + '</span><b>' + r.v + '</b></dd>';
-          }).join('') +
-          '<div class="src">출처 · ' + g.official.source + '</div>' +
-        '</dl>' +
-      '</div>' +
-
       (g.showSupplementWarning
         ? '<div class="card warn"><div class="card-t">⚠️ 합산 상한 주의</div>' +
           '<div class="card-b">' + g.supplementWarning + '</div></div>'
@@ -169,48 +129,29 @@ var HomeView = (function () {
     '</div>';
   }
 
-  function weeklySec(m) {
-    return '<div class="sec">' +
-      '<div class="sec-title">이번 주 충전률</div>' +
-      '<div class="sec-desc">하루 목표를 100%로 봤을 때 최근 7일 평균입니다.</div>' +
-      '<div class="gauge">' +
-        '<div class="gauge-top">' +
-          '<div style="font-size:13px;font-weight:600;color:#6B7684">오늘 ' + m.todayPercent + '% 충전</div>' +
-          '<div class="gauge-num">' + m.weekly.percent + '<small>%</small></div>' +
-        '</div>' +
-        '<div class="gauge-bar"><div class="gauge-fill" style="width:' + Math.min(100, m.weekly.percent) + '%"></div></div>' +
-        '<div class="gauge-cap">체내 저장량 ' + m.bodyStore + '% · 25(OH)D 반감기 ' +
-          Engine.HALF_LIFE_DAYS + '일을 적용해 지난 노출을 감가한 값입니다.</div>' +
-      '</div></div>';
-  }
-
-  function circadianSec(m) {
-    var c = m.circadian;
-    return '<div class="sec">' +
-      '<div class="sec-title">생체리듬</div>' +
-      '<div class="sec-desc">햇빛의 두 번째 축입니다. 비타민D와 파장이 달라요.</div>' +
-      '<div class="card' + (c.indoorHint ? ' info' : '') + '">' +
-        '<div class="card-t">🌗 심부체온 최저점 ' + c.tminText + '</div>' +
-        '<div class="card-b">' + c.body + '</div>' +
-      '</div>' +
-      (c.phaseLabel ? '<div class="card"><div class="card-t">⏱️ 오늘 권장 시점의 효과</div>' +
-        '<div class="card-b">' + c.phaseLabel + '</div></div>' : '') +
-      '<div class="card"><div class="card-t">🚫 빛 회피 창</div>' +
-        '<div class="card-b"><b>' + c.avoidText + '</b>부터 취침 전까지는 밝은 빛을 줄이세요. ' +
-        '기상 ' + c.wakeText + ' 기준 16시간 후입니다.</div></div>' +
-    '</div>';
-  }
-
-  function evidenceSec(m) {
+  /* 더 볼 것들로 가는 입구 — 홈을 짧게 유지하는 장치 */
+  function moreSec(m) {
     return '<div class="sec" style="padding-top:20px">' +
-      '<button class="btn btn-sub" id="h-evidence">계산 근거 보기</button>' +
-      '<div style="text-align:center;font-size:11.5px;color:#B0B8C1;margin-top:14px;line-height:1.6">' +
+      '<button class="more-row" id="h-more-weekly">' +
+        '<div class="more-ico">📈</div>' +
+        '<div class="more-body">' +
+          '<div class="more-t">자외선 · 생체리듬 자세히</div>' +
+          '<div class="more-d">시간별 자외선, 노출 가능 구간, 주간 충전률</div>' +
+        '</div>' + UI.ICON.right +
+      '</button>' +
+      '<button class="more-row" id="h-more-my" style="margin-top:8px">' +
+        '<div class="more-ico">👤</div>' +
+        '<div class="more-body">' +
+          '<div class="more-t">내 설정 · 계산 근거</div>' +
+          '<div class="more-d">피부 타입 ' + m.skinLabel + ' · ' + UI.esc(m.loc.name) + '</div>' +
+        '</div>' + UI.ICON.right +
+      '</button>' +
+      '<div style="text-align:center;font-size:11.5px;color:#B0B8C1;margin-top:18px;line-height:1.6">' +
         '기상 데이터 기상청 단기예보 · 생활기상지수 · 태양고도 NOAA SPA<br>' +
         '이 앱은 의학적 진단·처방을 대신하지 않습니다' +
       '</div></div>';
   }
 
-  /* ---------- 이벤트 ---------- */
   function bind(m) {
     var q = function (id) { return document.getElementById(id); };
 
@@ -251,50 +192,18 @@ var HomeView = (function () {
     };
     if (q('h-cta-tomorrow')) q('h-cta-tomorrow').onclick = function () { App.enableNotify(); };
     if (q('h-cta-alt')) q('h-cta-alt').onclick = function () {
-      var g = document.getElementById('gap-sec');
-      if (g) g.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      else UI.toast('오늘은 안내할 대체 수단이 없어요');
+      var g = el.querySelector('.sec');
+      window.scrollTo({ top: document.body.scrollHeight * 0.45, behavior: 'smooth' });
     };
 
     [].forEach.call(el.querySelectorAll('[data-win]'), function (b) {
       b.onclick = function () { App.startTimer(m.rx.windows[+b.dataset.win]); };
     });
 
-    if (q('h-evidence')) q('h-evidence').onclick = function () { evidenceSheet(m); };
+    if (q('h-more-weekly')) q('h-more-weekly').onclick = function () { App.go('weekly'); };
+    if (q('h-more-my')) q('h-more-my').onclick = function () { App.go('settings'); };
   }
 
-  function evidenceSheet(m) {
-    var p = m.rx.activeWindow ? m.rx.nowPoint
-          : (m.rx.targetWindow ? m.rx.targetWindow.best : m.rx.nowPoint);
-    var body =
-      '<div class="card"><div class="card-t">공식</div><div class="card-b" style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.9">' +
-        '비타민D 필요시간 = (k × MED × f_BSA) ÷ (1.5 × UVI)<br>' +
-        '화상 한계시간 = (MED × SPF) ÷ (1.5 × UVI)<br>' +
-        '열 안전 상한 = 체감온도 구간표<br>' +
-        '<b style="color:#3182F6">최종 = min(세 값)</b>' +
-      '</div></div>' +
-      '<div class="card"><div class="card-t">지금 대입한 값</div><dl class="official" style="margin-top:4px">' +
-        row('k (비타민D/홍반 비율)', Engine.K) +
-        row('MED (피부 타입 ' + 'ⅠⅡⅢⅣⅤⅥ'[m.rx.profile.skinType - 1] + ')', p.med + ' J/m²') +
-        row('f_BSA (' + Engine.CLOTHING[m.rx.profile.clothing].label + ')', p.fBSA) +
-        row('SPF', p.spf) +
-        row('UVI', p.uvi.toFixed(2)) +
-        row('환산계수', Engine.UVI_COEFF) +
-        row('체감온도', p.heatIndexC.toFixed(1) + '℃') +
-        row('태양고도', p.altitude.toFixed(1) + '°') +
-      '</dl></div>' +
-      '<div class="card"><div class="card-t">창이 열리는 조건</div><div class="card-b">' +
-        '① 태양고도 ≥ 45° — 그림자가 키보다 짧아야 UVB가 도달합니다<br>' +
-        '② 열 안전 상한 > 0<br>' +
-        '③ 계산된 노출시간 ≤ 60분 — 넘으면 비현실적이라 창을 내지 않습니다' +
-      '</div></div>' +
-      '<div class="card warn"><div class="card-t">아직 확정 안 된 값</div><div class="card-b">' +
-        'k는 문헌마다 0.3~0.5로 갈립니다. 이 버전은 중앙값 <b>0.4</b>로 고정했습니다. ' +
-        '노출시간→IU 환산도 편차가 커서 IU 대신 <b>충전률 %</b>로만 표시합니다.' +
-      '</div></div>';
-    UI.sheet('계산 근거', '모든 계산은 이 기기에서 이뤄집니다. 서버로 보내는 값은 없습니다.', body);
-  }
-  function row(k, v) { return '<dd><span>' + k + '</span><b>' + v + '</b></dd>'; }
 
   return { render: render };
 })();

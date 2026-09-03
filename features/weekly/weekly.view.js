@@ -30,6 +30,8 @@ var WeeklyView = (function () {
         '</div>' +
       '</div>' +
 
+      chartSec(m) +
+
       '<div class="sep"></div>' +
       '<div class="sec">' +
         '<div class="sec-title">체내 저장량</div>' +
@@ -67,6 +69,9 @@ var WeeklyView = (function () {
         '</div>' +
       '</div>' +
 
+      circadianSec(m) +
+      gapDetailSec(m) +
+
       '<div class="sep"></div>' +
       '<div class="sec">' +
         '<div class="sec-title">노출 이력</div>' +
@@ -80,6 +85,67 @@ var WeeklyView = (function () {
               '</div>';
             }).join('') + '</div>'
           : '<div class="empty"><em>🌤️</em>아직 기록이 없어요<br>타이머로 한 번 나가 보세요</div>') +
+      '</div>';
+  }
+
+  /* 홈에서 옮겨 온 시간별 그래프 */
+  function chartSec(m) {
+    var d = m.detail;
+    if (!d) return '';
+    return '<div class="sep"></div>' +
+      '<div class="sec">' +
+        '<div class="sec-title">오늘 시간별 자외선 · 기온</div>' +
+        '<div class="sec-desc">파란 띠가 나갈 수 있는 구간입니다.</div>' +
+        '<div class="chart-wrap">' +
+          '<div class="chart-legend">' +
+            '<i><b style="background:#3182F6"></b>자외선</i>' +
+            '<i><b style="background:#FF9500"></b>기온</i>' +
+          '</div>' + d.chart +
+        '</div>' +
+        '<div class="sun-line">' +
+          '<span>일출 <b>' + d.sun.rise + '</b> · 일몰 <b>' + d.sun.set + '</b></span>' +
+          '<span>남중 <b>' + d.solarNoonText + '</b> · 최대고도 <b>' + d.maxAltText + '</b></span>' +
+        '</div>' +
+      '</div>';
+  }
+
+  /* 홈에서 옮겨 온 §6 생체리듬 */
+  function circadianSec(m) {
+    var c = m.detail && m.detail.circadian;
+    if (!c) return '';
+    return '<div class="sep"></div>' +
+      '<div class="sec">' +
+        '<div class="sec-title">생체리듬</div>' +
+        '<div class="sec-desc">햇빛의 두 번째 축입니다. 비타민D와 파장이 달라요.</div>' +
+        '<div class="card' + (c.indoorHint ? ' info' : '') + '">' +
+          '<div class="card-t">🌗 심부체온 최저점 ' + c.tminText + '</div>' +
+          '<div class="card-b">' + c.body + '</div>' +
+        '</div>' +
+        (c.phaseLabel
+          ? '<div class="card"><div class="card-t">⏱️ 오늘 권장 시점의 효과</div>' +
+            '<div class="card-b">' + c.phaseLabel + '</div></div>'
+          : '') +
+        '<div class="card"><div class="card-t">🚫 빛 회피 창</div>' +
+          '<div class="card-b"><b>' + c.avoidText + '</b>부터 취침 전까지는 밝은 빛을 줄이세요. ' +
+          '기상 ' + c.wakeText + ' 기준 16시간 후입니다.</div></div>' +
+      '</div>';
+  }
+
+  /* 홈에서 옮겨 온 §5 상세 — 공식 섭취기준 (창이 없는 날만) */
+  function gapDetailSec(m) {
+    var g = m.detail && m.detail.gap;
+    if (!g) return '';
+    return '<div class="sep"></div>' +
+      '<div class="sec">' +
+        '<div class="sec-title">보충제를 고려할 구간입니다</div>' +
+        '<div class="sec-desc">저희가 용량을 정해 드리지는 않습니다. 공식 기준만 그대로 옮깁니다.</div>' +
+        '<dl class="official">' +
+          '<dt>비타민D 섭취 기준</dt>' +
+          g.official.rows.map(function (r) {
+            return '<dd><span>' + r.k + '</span><b>' + r.v + '</b></dd>';
+          }).join('') +
+          '<div class="src">출처 · ' + g.official.source + '</div>' +
+        '</dl>' +
       '</div>';
   }
 

@@ -12,8 +12,7 @@ var SettingsView = (function () {
     var p = m.profile;
 
     el.innerHTML =
-      '<div class="page-title">설정</div>' +
-      '<div class="page-sub">한 번 정해 두면 매일 입력할 것은 없습니다.</div>' +
+      profileHeader(m) +
 
       '<div class="sec" style="padding-top:8px">' +
         '<div class="sec-title">피부 타입</div>' +
@@ -81,8 +80,10 @@ var SettingsView = (function () {
         '<button class="btn btn-sub" id="s-reset" style="color:#F04452">전체 초기화</button>' +
       '</div>' +
 
+      evidenceSec() +
+
       '<div class="sec" style="padding-top:0">' +
-        '<div class="card"><div class="card-t">일광 처방</div><div class="card-b">' +
+        '<div class="card"><div class="card-t">하루 햇빛</div><div class="card-b">' +
           '백엔드 없음 · 모든 계산은 이 기기에서. 기상 데이터만 기상청에서 1시간마다 받아옵니다.<br>' +
           '태양고도 NOAA SPA · 체감온도 NOAA Heat Index · 섭취기준 보건복지부(2020)' +
         '</div></div>' +
@@ -115,6 +116,32 @@ var SettingsView = (function () {
         }).join('') +
       '</div>' +
     '</div>';
+  }
+
+  /* 참고 앱처럼 프로필 요약을 맨 위에 둔다 */
+  function profileHeader(m) {
+    var skin = 'ⅠⅡⅢⅣⅤⅥ'[m.profile.skinType - 1];
+    return '<div class="my-head">' +
+      '<div class="my-ava">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">' +
+        '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-4 3.4-6 7.5-6s7.5 2 7.5 6"/></svg>' +
+      '</div>' +
+      '<div class="my-body">' +
+        '<div class="my-t">마이페이지</div>' +
+        '<div class="my-d">피부 타입 ' + skin + ' · 기상 ' + m.profile.wakeTime +
+          ' · ' + (m.location ? UI.esc(m.location.name) : '위치 미설정') + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  /* 홈에서 옮겨 온 계산 근거 */
+  function evidenceSec() {
+    return '<div class="sep"></div>' +
+      '<div class="sec">' +
+        '<div class="sec-title">계산 근거</div>' +
+        '<div class="sec-desc">지금 어떤 값으로 계산하고 있는지 그대로 보여 드립니다.</div>' +
+        '<button class="btn btn-sub" id="s-evidence">공식과 대입값 보기</button>' +
+      '</div>';
   }
 
   function row(id, title, desc, right) {
@@ -179,6 +206,7 @@ var SettingsView = (function () {
       };
     });
 
+    if (q('s-evidence')) q('s-evidence').onclick = function () { evidenceSheet(); };
     q('s-recache').onclick = function () { App.refresh(true); UI.toast('예보를 다시 받았어요'); };
     q('s-reset').onclick = function () {
       UI.sheet('전체 초기화', '설정과 노출 이력이 모두 지워집니다. 되돌릴 수 없어요.',
@@ -191,6 +219,42 @@ var SettingsView = (function () {
         location.reload();
       };
     };
+  }
+
+  /* 계산 근거 — 지금 대입 중인 값 그대로 (홈에서 이곳으로 옮겼다) */
+  function evidenceSheet() {
+    var rx = App.prescription();
+    if (!rx) return UI.toast('예보를 불러온 뒤에 볼 수 있어요');
+    var p = rx.activeWindow ? rx.nowPoint : (rx.targetWindow ? rx.targetWindow.best : rx.nowPoint);
+    var dd = function (k, v) { return '<dd><span>' + k + '</span><b>' + v + '</b></dd>'; };
+
+    UI.sheet('계산 근거', '모든 계산은 이 기기에서 이뤄집니다. 서버로 보내는 값은 없습니다.',
+      '<div class="card"><div class="card-t">공식</div>' +
+        '<div class="card-b" style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.9">' +
+          '비타민D 필요시간 = (k × MED) ÷ (1.5 × UVI × f_BSA)<br>' +
+          '화상 한계시간 = (MED × SPF) ÷ (1.5 × UVI)<br>' +
+          '열 안전 상한 = 체감온도 구간표<br>' +
+          '<b style="color:#3182F6">최종 = min(세 값)</b>' +
+        '</div></div>' +
+      '<div class="card"><div class="card-t">지금 대입한 값</div><dl class="official" style="margin-top:4px">' +
+        dd('k (비타민D/홍반 비율)', Engine.K) +
+        dd('MED (피부 타입 ' + 'ⅠⅡⅢⅣⅤⅥ'[rx.profile.skinType - 1] + ')', p.med + ' J/m²') +
+        dd('f_BSA (' + Engine.CLOTHING[rx.profile.clothing].label + ')', p.fBSA) +
+        dd('SPF', p.spf) +
+        dd('UVI', p.uvi.toFixed(2)) +
+        dd('환산계수', Engine.UVI_COEFF) +
+        dd('체감온도', p.heatIndexC.toFixed(1) + '℃') +
+        dd('태양고도', p.altitude.toFixed(1) + '°') +
+      '</dl></div>' +
+      '<div class="card"><div class="card-t">창이 열리는 조건</div><div class="card-b">' +
+        '① 태양고도 ≥ 45° — 그림자가 키보다 짧아야 UVB가 도달합니다<br>' +
+        '② 열 안전 상한 &gt; 0<br>' +
+        '③ 계산된 노출시간 ≤ 60분' +
+      '</div></div>' +
+      '<div class="card warn"><div class="card-t">아직 확정 안 된 값</div><div class="card-b">' +
+        'k는 문헌마다 0.3~0.5로 갈립니다. 이 버전은 중앙값 <b>0.4</b>로 고정했습니다. ' +
+        '노출시간→IU 환산도 편차가 커서 IU 대신 <b>충전률 %</b>로만 표시합니다.' +
+      '</div></div>');
   }
 
   /* 설정이 바뀌면 처방을 다시 계산해야 한다 (아키텍처: 설정 변경 시 재계산) */
