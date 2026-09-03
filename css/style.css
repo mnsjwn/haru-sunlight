@@ -302,6 +302,43 @@ svg { display:block; flex:none; }
 .tab.on { color:var(--blue); }
 .tab.on span { font-weight:700; }
 
+/* ---------- 시작 화면 (아이콘과 같은 테마) ---------- */
+#login { position:fixed; inset:0; z-index:120; display:none;
+  background:linear-gradient(168deg, #4B95FF 0%, #3182F6 46%, #2560D8 100%); }
+#login.show { display:block; }
+.lg-in {
+  max-width:480px; margin:0 auto; height:100%;
+  display:flex; flex-direction:column;
+  padding:0 28px calc(28px + var(--safe-b));
+  animation:lgIn .5s var(--ease);
+}
+@keyframes lgIn { from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;} }
+
+.lg-top { padding-top:74px; text-align:center; }
+.lg-icon { display:flex; justify-content:center;
+  filter:drop-shadow(0 12px 22px rgba(11,45,110,.34)); animation:lgSun 5s ease-in-out infinite; }
+@keyframes lgSun { 0%,100%{transform:translateY(0) rotate(0);} 50%{transform:translateY(-7px) rotate(6deg);} }
+
+.lg-title { margin-top:26px; font-size:38px; font-weight:800; color:#fff; letter-spacing:-1.4px; }
+.lg-sub { margin-top:14px; font-size:16.5px; font-weight:500; color:rgba(255,255,255,.9);
+  line-height:1.6; letter-spacing:-.3px; }
+
+.lg-points { margin:auto 0; display:flex; flex-direction:column; gap:11px; }
+.lg-point {
+  display:flex; align-items:center; gap:14px; padding:16px 18px;
+  border-radius:16px; background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.2);
+}
+.lg-point-ico { font-size:22px; flex:none; }
+.lg-point-t { font-size:15.5px; font-weight:700; color:#fff; letter-spacing:-.3px; }
+.lg-point-d { font-size:13px; font-weight:500; color:rgba(255,255,255,.82); margin-top:2px; }
+
+.lg-foot { padding-bottom:4px; }
+.lg-btn { background:#fff; color:#1B64DA; font-size:17px; }
+.lg-btn:active { background:#EAF1FF; }
+.lg-note { margin-top:14px; text-align:center; font-size:13px; font-weight:500;
+  color:rgba(255,255,255,.75); }
+
 /* ---------- 온보딩 ---------- */
 #onboarding { position:fixed; inset:0; background:var(--white); z-index:100; display:none; }
 #onboarding.show { display:block; }

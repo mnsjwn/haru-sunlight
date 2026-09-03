@@ -28,7 +28,8 @@ var App = (function () {
     state.location = Repo.getLocation();
 
     if (!state.profile.onboarded || !state.location) {
-      OnboardingView.show();
+      /* 첫 진입은 시작 화면부터 — 거기서 "시작하기"를 누르면 온보딩으로 넘어간다 */
+      LoginView.show();
       return;
     }
     var hash = (location.hash || '').replace('#', '');

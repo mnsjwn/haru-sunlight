@@ -1,6 +1,6 @@
 /* 서비스 워커 — 오프라인 캐시 (앱 셸)
    예보 데이터는 localStorage에 따로 캐시된다 (§8 하루 1회 호출) */
-var CACHE = 'sunrx-v3';
+var CACHE = 'sunrx-v4';
 var SHELL = [
   './', './index.html', './manifest.json', './icon.svg',
   './css/style.css',
@@ -8,6 +8,7 @@ var SHELL = [
   './core/kma.geo.js', './core/providers/kma.provider.js',
   './core/weather.api.js', './core/prescription.js',
   './shared/ui.js', './shared/chart.js', './shared/notify.js', './shared/app.js',
+  './features/login/login.view.js',
   './features/onboarding/onboarding.service.js', './features/onboarding/onboarding.view.js',
   './features/home/home.service.js', './features/home/home.view.js',
   './features/timer/timer.service.js', './features/timer/timer.view.js',
