@@ -249,21 +249,8 @@ var App = (function () {
 
 document.addEventListener('DOMContentLoaded', function () {
   App.init();
-  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
-    navigator.serviceWorker.register('sw.js').then(function (reg) {
-      reg.update();                       // 새 sw.js가 있으면 즉시 받아온다
-      /* 새 워커가 대기 상태로 멈춰 있으면 바로 넘겨받게 한다 —
-         안 그러면 코드를 고쳐도 옛 캐시가 계속 나온다 */
-      if (reg.waiting) reg.waiting.postMessage('skipWaiting');
-      reg.addEventListener('updatefound', function () {
-        var nw = reg.installing;
-        if (!nw) return;
-        nw.addEventListener('statechange', function () {
-          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-            location.reload();            // 새 버전 적용 후 한 번 새로고침
-          }
-        });
-      });
-    }).catch(function () {});
-  }
+  /* 서비스 워커는 지금 등록하지 않는다.
+     초기 '캐시 우선' 워커 때문에 코드를 고쳐도 옛 화면이 계속 떠서,
+     sw.js를 자기 제거용으로 바꿔 두었다(이미 등록된 것만 스스로 정리된다).
+     오프라인 기능을 다시 켤 때 sw.js와 함께 이 등록을 되살리면 된다. */
 });

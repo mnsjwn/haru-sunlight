@@ -1,61 +1,38 @@
-/* 서비스 워커 — 오프라인 캐시 (앱 셸)
-   예보 데이터는 localStorage에 따로 캐시된다 (§8 하루 1회 호출) */
-var CACHE = 'sunrx-v4';
-var SHELL = [
-  './', './index.html', './manifest.json', './icon.svg',
-  './css/style.css',
-  './core/solar.js', './core/engine.js', './core/store.repo.js',
-  './core/kma.geo.js', './core/providers/kma.provider.js',
-  './core/weather.api.js', './core/prescription.js',
-  './shared/ui.js', './shared/chart.js', './shared/notify.js', './shared/app.js',
-  './features/login/login.view.js',
-  './features/onboarding/onboarding.service.js', './features/onboarding/onboarding.view.js',
-  './features/home/home.service.js', './features/home/home.view.js',
-  './features/timer/timer.service.js', './features/timer/timer.view.js',
-  './features/weekly/weekly.service.js', './features/weekly/weekly.view.js',
-  './features/settings/settings.service.js', './features/settings/settings.view.js'
-];
+/* =========================================================
+   서비스 워커 — 자기 제거용 (kill switch)
 
-self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) {
-    return Promise.all(SHELL.map(function (u) {
-      return c.add(u).catch(function () {});
-    }));
-  }).then(function () { return self.skipWaiting(); }));
+   왜 이렇게 두었나
+   ----------------
+   초기 버전이 '캐시 우선'이라, 코드를 고쳐도 브라우저가 옛 파일을 계속 썼다.
+   더 나쁜 건 그 옛 워커가 '고쳐진 워커를 불러오는 코드'까지 가로막아서
+   자력으로 풀리지 않았다는 점이다(닭-달걀).
+
+   그래서 이 파일은 캐시를 전부 지우고 스스로 등록을 해제한 뒤
+   열려 있는 탭을 새로고침한다. 그 뒤로는 모든 요청이 네트워크로 바로 간다.
+   개발 중에는 이게 맞다 — 고치면 새로고침만으로 바로 반영된다.
+
+   ⚠️ 오프라인(PWA) 기능을 다시 켤 때
+      1) 이 파일을 캐시 전략(네트워크 우선 권장) 버전으로 되돌리고
+      2) shared/app.js 맨 아래의 serviceWorker.register 호출을 되살린다.
+      단, 그때도 '캐시 우선'으로는 돌아가지 말 것.
+   ========================================================= */
+
+self.addEventListener('install', function () {
+  self.skipWaiting();          // 대기하지 않고 바로 활성화
 });
 
 self.addEventListener('activate', function (e) {
-  e.waitUntil(caches.keys().then(function (keys) {
-    return Promise.all(keys.filter(function (k) { return k !== CACHE; })
-      .map(function (k) { return caches.delete(k); }));
-  }).then(function () { return self.clients.claim(); }));
-});
-
-self.addEventListener('message', function (e) {
-  if (e.data === 'skipWaiting') self.skipWaiting();
-});
-
-self.addEventListener('fetch', function (e) {
-  var url = new URL(e.request.url);
-  if (e.request.method !== 'GET') return;
-
-  /* 예보 API는 항상 네트워크 우선 (실패 시 앱이 localStorage 캐시로 폴백) */
-  if (url.hostname.indexOf('apis.data.go.kr') >= 0) return;
-
-  /* 네트워크 우선 — 코드를 고치면 새로고침만으로 바로 반영된다.
-     (캐시 우선이면 수정해도 옛 파일이 계속 나와서 "안 고쳐졌다"처럼 보인다)
-     네트워크가 죽었을 때만 캐시로 폴백한다. */
-  e.respondWith(
-    fetch(e.request).then(function (res) {
-      if (res && res.ok && url.origin === location.origin) {
-        var copy = res.clone();
-        caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
-      }
-      return res;
-    }).catch(function () {
-      return caches.match(e.request).then(function (hit) {
-        return hit || caches.match('./index.html');
-      });
-    })
+  e.waitUntil(
+    caches.keys()
+      .then(function (keys) {
+        return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+      })
+      .then(function () { return self.registration.unregister(); })
+      .then(function () { return self.clients.matchAll({ type: 'window' }); })
+      .then(function (clients) {
+        clients.forEach(function (c) { c.navigate(c.url); });   // 최신 코드로 다시 로드
+      })
   );
 });
+
+/* fetch 핸들러 없음 = 모든 요청이 네트워크로 직행 */
