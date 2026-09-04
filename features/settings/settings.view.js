@@ -11,13 +11,17 @@ var SettingsView = (function () {
   var openSido = null;   // 지역 선택에서 펼쳐 둔 시·도
 
   function render() {
-    var m = SettingsService.model();
+    /* 예보를 못 받았으면 App.prescription()이 null을 준다 — 그때는 오늘 카드만 빠지고
+       나머지 설정은 그대로 열린다(키 없음 안내가 여기서 이뤄져야 하므로). */
+    var m = SettingsService.model(App.prescription());
     el = document.getElementById('screen-settings');
     var p = m.profile;
 
     el.innerHTML =
       profileHeader(m) +
       actionRow() +
+      todayCard(m) +
+      moreCard() +
 
       '<div class="sec">' +
         '<div class="c-head">' +
@@ -98,11 +102,89 @@ var SettingsView = (function () {
       '<div class="sec">' +
         '<div class="card"><div class="card-t">하루 햇빛</div><div class="card-b">' +
           '백엔드 없음 · 모든 계산은 이 기기에서. 기상 데이터만 기상청에서 1시간마다 받아옵니다.<br>' +
+          '기상 데이터 기상청 단기예보 · 생활기상지수<br>' +
           '태양고도 NOAA SPA · 체감온도 NOAA Heat Index · 섭취기준 보건복지부(2020)' +
         '</div></div>' +
+        '<div style="text-align:center;font-size:11px;color:#AEB8C7;margin-top:14px;line-height:1.6">' +
+          '이 앱은 의학적 진단·처방을 대신하지 않습니다</div>' +
       '</div>';
 
     bind();
+  }
+
+  /* ---------- 홈에서 옮겨 온 '무엇이 이 시간을 정했나' ----------
+     오늘 처방이 왜 그 숫자인지 설명하는 카드다. 알약 막대로 한눈에 보여 주고
+     그 아래에 세 제약의 값과 근거를 그대로 편다. */
+
+  /* 알약 막대에 쓸 짧은 이름 · 표기 (막대 폭이 좁아 긴 문구는 못 넣는다) */
+  var SHORT = { vitd: '비타민D', burn: '화상', heat: '열', alt: '고도' };
+  function short(v) { return v === '제한 없음' ? '없음' : v; }
+
+  function todayCard(m) {
+    var t = m.today;
+    if (!t) return '';
+    var head = t.state === 'closed'
+      ? t.modeLabel + ' 모드 · 오늘은 창이 없어요'
+      : (t.kicker ? t.kicker + ' ' : '') + t.minutes + '분 · ' + t.why;
+
+    return '<div class="sec">' +
+      '<div class="c-head">' +
+        '<div class="c-ico warm">📋</div>' +
+        '<div class="c-t">무엇이 이 시간을 정했나<small>파란 항목이 오늘의 결정자</small></div>' +
+      '</div>' +
+      '<div class="stat-cap" style="margin-top:0;margin-bottom:2px">' + head + '</div>' +
+      pbars(t) +
+      '<div class="limits" style="margin-top:18px">' +
+        t.limits.map(function (l) {
+          return '<div class="limit' + (l.win ? ' win' : '') + '">' +
+            '<div class="limit-ico">' + l.icon + '</div>' +
+            '<div class="limit-body">' +
+              '<div class="limit-name">' + l.name +
+                (l.win ? '<span class="limit-tag">결정</span>' : '') + '</div>' +
+              '<div class="limit-note">' + l.note + '</div>' +
+            '</div>' +
+            '<div class="limit-val">' + l.value + '</div>' +
+          '</div>';
+        }).join('') +
+      '</div></div>';
+  }
+
+  /* 세 제약을 알약 막대로 — 가장 짧은 것이 파랑(오늘의 결정자)이다.
+     min() 계산이라 파란 막대가 제일 낮게 보이는 게 정상이다. */
+  function pbars(t) {
+    var rows = t.limits.filter(function (l) { return l.key !== 'alt'; });
+    if (!rows.length) return '';
+
+    var vals = rows.map(function (l) {
+      var n = parseFloat(l.value);                 // '25분' → 25, '제한 없음' → NaN
+      return isFinite(n) ? Math.min(n, 60) : 60;   // 60분을 천장으로 본다
+    });
+    var max = Math.max.apply(null, vals) || 60;
+
+    return '<div class="pbars" style="margin-top:16px">' +
+      rows.map(function (l, i) {
+        var h = Math.max(38, Math.round(vals[i] / max * 100));
+        return '<div class="pbar-c">' +
+          '<div class="pbar' + (l.win ? ' on' : '') + '" style="height:' + h + '%">' +
+            '<b>' + short(l.value) + '</b><span>' + (SHORT[l.key] || l.name) + '</span>' +
+          '</div></div>';
+      }).join('') +
+    '</div>' +
+    '<div class="stat-cap" style="text-align:center;margin-top:12px">' +
+      '세 제약 중 <b>가장 짧은 값</b>이 오늘의 처방이에요</div>';
+  }
+
+  /* 홈 맨 아래에 있던 이동 행 — 주간 탭으로 가는 입구 */
+  function moreCard() {
+    return '<div class="sec">' +
+      '<button class="more-row" id="s-more-weekly">' +
+        '<div class="more-ico">📈</div>' +
+        '<div class="more-body">' +
+          '<div class="more-t">자외선 · 생체리듬 자세히</div>' +
+          '<div class="more-d">시간별 자외선, 노출 가능 구간, 주간 충전률</div>' +
+        '</div>' + UI.ICON.right +
+      '</button>' +
+    '</div>';
   }
 
   /* 인사말 + 아바타 (레퍼런스의 "Hi, Sophia!" 자리) */
@@ -172,6 +254,7 @@ var SettingsView = (function () {
     var q = function (id) { return document.getElementById(id); };
 
     if (q('s-go-home')) q('s-go-home').onclick = function () { App.go('home'); };
+    if (q('s-more-weekly')) q('s-more-weekly').onclick = function () { App.go('weekly'); };
     if (q('s-go-week')) q('s-go-week').onclick = function () { App.go('weekly'); };
 
     [].forEach.call(el.querySelectorAll('#s-skin button'), function (b) {

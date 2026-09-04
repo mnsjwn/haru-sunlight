@@ -14,11 +14,29 @@ var SettingsService = (function () {
   ];
   var SPF = [1, 15, 30, 50];
 
-  function model() {
+  /* rx(오늘 처방)를 받으면 '무엇이 이 시간을 정했나'까지 뷰모델에 담는다.
+     홈에서 이곳으로 옮겨 온 카드다. 예보를 못 받은 상태(키 없음·오류)에서도
+     설정 화면은 열려야 하므로 rx가 없으면 today를 null로 둔다. */
+  function model(rx) {
     var p = Repo.getProfile();
     var loc = Repo.getLocation();
     var cache = Repo.getWeatherCache();
+    var today = null;
+    if (rx) {
+      var h = HomeService.build(rx, {});
+      today = {
+        limits: h.limits,
+        mode: h.mode,
+        modeLabel: h.modeLabel,
+        minutes: h.hero.minutes,
+        kicker: h.hero.kicker,
+        why: h.hero.why,
+        state: h.hero.state
+      };
+    }
+
     return {
+      today: today,
       profile: p,
       location: loc,
       skinOptions: SKIN,
