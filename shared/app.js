@@ -162,20 +162,23 @@ var App = (function () {
 
   /* ---------- 로딩 · 오류 ---------- */
   function renderSkeleton() {
+    var bar = function (w, h, mt) {
+      return '<div class="skel" style="width:' + w + ';height:' + h + 'px' +
+             (mt ? ';margin-top:' + mt + 'px' : '') + '"></div>';
+    };
     document.getElementById('screen-' + state.tab).innerHTML =
-      '<div class="hero" style="padding-top:40px">' +
-        '<div class="skel" style="width:88px;height:26px;border-radius:99px"></div>' +
-        '<div class="skel" style="width:110px;height:20px;margin-top:22px"></div>' +
-        '<div class="skel" style="width:190px;height:64px;margin-top:12px;border-radius:14px"></div>' +
-        '<div class="skel" style="width:70%;height:18px;margin-top:16px"></div>' +
-        '<div class="skel" style="width:55%;height:18px;margin-top:8px"></div>' +
+      '<div class="hdr"><div class="hdr-l">' + bar('180px', 30) + bar('130px', 15, 12) + '</div>' +
+        '<div class="hdr-acts">' +
+          '<div class="skel" style="width:46px;height:46px;border-radius:50%"></div>' +
+          '<div class="skel" style="width:46px;height:46px;border-radius:50%"></div>' +
+        '</div></div>' +
+      '<div class="actrow">' +
+        '<div class="skel" style="width:50px;height:50px;border-radius:50%"></div>' +
+        '<div class="skel" style="width:50px;height:50px;border-radius:50%"></div>' +
+        '<div class="skel" style="flex:1;height:50px;border-radius:99px"></div>' +
       '</div>' +
-      '<div class="sep"></div>' +
-      '<div class="sec">' +
-        '<div class="skel" style="width:100%;height:64px;margin-bottom:8px;border-radius:14px"></div>' +
-        '<div class="skel" style="width:100%;height:64px;margin-bottom:8px;border-radius:14px"></div>' +
-        '<div class="skel" style="width:100%;height:64px;border-radius:14px"></div>' +
-      '</div>';
+      '<div class="sec">' + bar('60%', 20) + bar('50%', 46, 16) + bar('100%', 150, 20) + '</div>' +
+      '<div class="sec">' + bar('45%', 18) + bar('100%', 62, 14) + bar('100%', 62, 8) + '</div>';
   }
 
   /* 서비스키는 앱 UI에 넣지 않는다(설정 화면에도 없음).

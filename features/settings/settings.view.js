@@ -1,5 +1,9 @@
 /* =========================================================
-   기능: 설정 — 뷰(화면)
+   기능: 설정(마이페이지) — 뷰(화면)
+
+   레퍼런스의 마지막 화면처럼 인사말 + 아바타로 열고,
+   원형 버튼 + 파란 알약 CTA를 얹은 뒤 카드로 항목을 묶는다.
+   설정 항목·동작은 이전과 완전히 같다.
    ========================================================= */
 var SettingsView = (function () {
 
@@ -13,32 +17,36 @@ var SettingsView = (function () {
 
     el.innerHTML =
       profileHeader(m) +
+      actionRow() +
 
-      '<div class="sec" style="padding-top:8px">' +
-        '<div class="sec-title">피부 타입</div>' +
-        '<div class="sec-desc">Fitzpatrick 분류 · 현재 MED <b>' + m.medOfCurrent + ' J/m²</b>. ' +
-          '타입이 한 단계 오르면 필요한 시간도 그만큼 늘어납니다.</div>' +
+      '<div class="sec">' +
+        '<div class="c-head">' +
+          '<div class="c-ico">🧑‍🦰</div>' +
+          '<div class="c-t">피부 타입<small>Fitzpatrick 분류 · 현재 MED ' + m.medOfCurrent + ' J/m²</small></div>' +
+        '</div>' +
         '<div class="seg" id="s-skin">' +
           m.skinOptions.map(function (s) {
-            return '<button data-t="' + s.t + '"' + (p.skinType === s.t ? ' class="on"' : '') + '>' + s.label + '</button>';
+            return '<button data-t="' + s.t + '"' + (p.skinType === s.t ? ' class="on"' : '') + '>' +
+                   s.label + '</button>';
           }).join('') +
         '</div>' +
-        '<div style="font-size:12.5px;color:#8B95A1;margin-top:10px;font-weight:500">' +
+        '<div class="stat-cap" style="margin-top:12px">' +
           m.skinOptions.filter(function (s) { return s.t === p.skinType; })[0].desc + '</div>' +
       '</div>' +
 
-      '<div class="sep"></div>' +
       '<div class="sec">' +
-        '<div class="sec-title">기본 옷차림</div>' +
-        '<div class="sec-desc">노출 피부 면적 비율(f_BSA)이 필요 시간을 좌우합니다.</div>' +
+        '<div class="c-head">' +
+          '<div class="c-ico warm">👕</div>' +
+          '<div class="c-t">기본 옷차림<small>노출 피부 면적(f_BSA)이 필요 시간을 좌우합니다</small></div>' +
+        '</div>' +
         '<div class="seg" id="s-cloth">' +
           m.clothingOptions.map(function (c) {
             return '<button data-c="' + c.key + '"' + (p.clothing === c.key ? ' class="on"' : '') + '>' +
-              c.label + '<div style="font-size:11px;color:#8B95A1;font-weight:600;margin-top:2px">' +
+              c.label + '<div style="font-size:11px;color:#8A96AA;font-weight:700;margin-top:2px">' +
               Math.round(c.f * 100) + '%</div></button>';
           }).join('') +
         '</div>' +
-        '<div style="height:10px"></div>' +
+        '<div style="height:8px"></div>' +
         '<div class="seg" id="s-spf">' +
           m.spfOptions.map(function (v) {
             return '<button data-s="' + v + '"' + (+p.spf === v ? ' class="on"' : '') + '>' +
@@ -47,22 +55,28 @@ var SettingsView = (function () {
         '</div>' +
       '</div>' +
 
-      '<div class="sep"></div>' +
-      row('s-wake', '기상 시간', '생체리듬 계산 기준', '<input type="time" id="s-wake-in" value="' + p.wakeTime +
-          '" style="border:none;background:#F2F4F6;border-radius:9px;padding:8px 10px;font-size:14px;font-weight:700;color:#191F28">') +
-      toggleRow('s-circ', '생체리듬 안내', '심부체온 최저점 · 빛 회피 창을 홈에 표시', p.useCircadian) +
-
-      '<div class="sep"></div>' +
-      toggleRow('s-supp', '보충제 복용 중', '켜면 합산 상한(4,000 IU/일) 경고를 함께 보여드려요', p.supplement) +
-      toggleRow('s-notify', '알림', m.notifySupported
+      '<div class="sec">' +
+        '<div class="c-head">' +
+          '<div class="c-ico plum">🌗</div>' +
+          '<div class="c-t">리듬 · 알림</div>' +
+        '</div>' +
+        row('s-wake', '기상 시간', '생체리듬 계산 기준',
+          '<input type="time" id="s-wake-in" value="' + p.wakeTime +
+          '" style="border:none;background:#fff;border-radius:12px;padding:9px 11px;' +
+          'font-size:14px;font-weight:800;color:#141A24">') +
+        toggleRow('s-circ', '생체리듬 안내', '심부체온 최저점 · 빛 회피 창을 주간 탭에 표시', p.useCircadian) +
+        toggleRow('s-supp', '보충제 복용 중', '켜면 합산 상한(4,000 IU/일) 경고를 함께 보여드려요', p.supplement) +
+        toggleRow('s-notify', '알림', m.notifySupported
           ? '창이 열리기 ' + Notify.LEAD_MIN + '분 전에 알려드려요'
           : '이 브라우저는 알림을 지원하지 않아요', p.notify && m.notifyGranted) +
+      '</div>' +
 
-      '<div class="sep"></div>' +
       '<div class="sec">' +
-        '<div class="sec-title">위치</div>' +
-        '<div class="sec-desc">기상청 API 기준 국내 지역만 지원해요. 기기에만 저장돼요.</div>' +
-        '<div class="card" style="margin-bottom:8px"><div class="card-b">' +
+        '<div class="c-head">' +
+          '<div class="c-ico mint">📍</div>' +
+          '<div class="c-t">위치<small>기상청 API 기준 국내 지역만 · 기기에만 저장돼요</small></div>' +
+        '</div>' +
+        '<div class="card" style="margin-bottom:10px"><div class="card-b">' +
           (m.location
             ? '<b>' + UI.esc(m.location.name) + '</b> · ' + m.location.lat + ', ' + m.location.lon +
               (m.location.precise ? ' · 현재 위치' : ' · 도시 선택')
@@ -72,17 +86,16 @@ var SettingsView = (function () {
         regionPicker(m) +
       '</div>' +
 
-      '<div class="sep"></div>' +
       '<div class="sec">' +
-        '<div class="sec-title">데이터</div>' +
-        '<div class="sec-desc">예보 캐시 ' + m.cacheText + ' · 1시간마다 자동으로 새로 받습니다.</div>' +
+        '<div class="c-head">' +
+          '<div class="c-ico">💾</div>' +
+          '<div class="c-t">데이터<small>예보 캐시 ' + m.cacheText + ' · 1시간마다 자동 갱신</small></div>' +
+        '</div>' +
         '<button class="btn btn-sub" id="s-recache" style="margin-bottom:8px">예보 새로 받기</button>' +
-        '<button class="btn btn-sub" id="s-reset" style="color:#F04452">전체 초기화</button>' +
+        '<button class="btn btn-sub" id="s-reset" style="color:#F0475B">전체 초기화</button>' +
       '</div>' +
 
-      evidenceSec() +
-
-      '<div class="sec" style="padding-top:0">' +
+      '<div class="sec">' +
         '<div class="card"><div class="card-t">하루 햇빛</div><div class="card-b">' +
           '백엔드 없음 · 모든 계산은 이 기기에서. 기상 데이터만 기상청에서 1시간마다 받아옵니다.<br>' +
           '태양고도 NOAA SPA · 체감온도 NOAA Heat Index · 섭취기준 보건복지부(2020)' +
@@ -92,6 +105,31 @@ var SettingsView = (function () {
     bind();
   }
 
+  /* 인사말 + 아바타 (레퍼런스의 "Hi, Sophia!" 자리) */
+  function profileHeader(m) {
+    var skin = 'ⅠⅡⅢⅣⅤⅥ'[m.profile.skinType - 1];
+    return '<div class="my-head">' +
+      '<div class="my-body">' +
+        '<div class="my-t">마이페이지</div>' +
+        '<div class="my-d">피부 타입 ' + skin + ' · 기상 ' + m.profile.wakeTime +
+          ' · ' + (m.location ? UI.esc(m.location.name) : '위치 미설정') + '</div>' +
+      '</div>' +
+      '<div class="my-ava">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">' +
+        '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-4 3.4-6 7.5-6s7.5 2 7.5 6"/></svg>' +
+      '</div>' +
+    '</div>';
+  }
+
+  /* 원형 버튼 + 파란 알약 CTA — 계산 근거는 홈에서도 같은 시트를 연다 */
+  function actionRow() {
+    return '<div class="actrow">' +
+      '<button class="act-c" id="s-go-home" aria-label="홈으로">' + UI.ICON.home + '</button>' +
+      '<button class="act-c" id="s-go-week" aria-label="기록 보기">' + UI.ICON.week + '</button>' +
+      '<button class="act-cta" id="s-evidence">' + UI.ICON.sliders + '공식과 대입값 보기</button>' +
+    '</div>';
+  }
+
   /* 지역 선택 — 시도를 먼저 고르고 그 안의 지역을 고른다.
      지역마다 기상청 지점코드(areaNo)가 달라 자외선지수도 그 지역 값으로 바뀐다. */
   function regionPicker(m) {
@@ -99,49 +137,23 @@ var SettingsView = (function () {
     var curSido = openSido || (cur ? cur.sido : (KmaGeo.GROUPS[0] || {}).sido);
     var group = KmaGeo.GROUPS.filter(function (g) { return g.sido === curSido; })[0] || KmaGeo.GROUPS[0];
 
-    return '<div style="margin-top:14px">' +
-      '<div style="font-size:12.5px;font-weight:700;color:#6B7684;margin-bottom:7px">시 · 도</div>' +
-      '<div class="ob-city" id="s-sido">' +
+    return '<div style="margin-top:16px">' +
+      '<div style="font-size:12px;font-weight:800;color:#66738A;margin-bottom:8px">시 · 도</div>' +
+      '<div class="ob-city" id="s-sido" style="margin-top:0">' +
         KmaGeo.GROUPS.map(function (g) {
           return '<button data-sido="' + g.sido + '"' + (g.sido === curSido ? ' class="on"' : '') +
                  '>' + g.sido + '</button>';
         }).join('') +
       '</div>' +
-      '<div style="font-size:12.5px;font-weight:700;color:#6B7684;margin:16px 0 7px">' +
-        group.sido + ' 지역 <span style="font-weight:500;color:#B0B8C1">· ' + group.areas.length + '곳</span></div>' +
-      '<div class="ob-city" id="s-city">' +
+      '<div style="font-size:12px;font-weight:800;color:#66738A;margin:18px 0 8px">' +
+        group.sido + ' 지역 <span style="font-weight:600;color:#AEB8C7">· ' + group.areas.length + '곳</span></div>' +
+      '<div class="ob-city" id="s-city" style="margin-top:0">' +
         group.areas.map(function (a) {
           var on = m.location && m.location.name === a.name;
           return '<button data-city="' + a.name + '"' + (on ? ' class="on"' : '') + '>' + a.name + '</button>';
         }).join('') +
       '</div>' +
     '</div>';
-  }
-
-  /* 참고 앱처럼 프로필 요약을 맨 위에 둔다 */
-  function profileHeader(m) {
-    var skin = 'ⅠⅡⅢⅣⅤⅥ'[m.profile.skinType - 1];
-    return '<div class="my-head">' +
-      '<div class="my-ava">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">' +
-        '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-4 3.4-6 7.5-6s7.5 2 7.5 6"/></svg>' +
-      '</div>' +
-      '<div class="my-body">' +
-        '<div class="my-t">마이페이지</div>' +
-        '<div class="my-d">피부 타입 ' + skin + ' · 기상 ' + m.profile.wakeTime +
-          ' · ' + (m.location ? UI.esc(m.location.name) : '위치 미설정') + '</div>' +
-      '</div>' +
-    '</div>';
-  }
-
-  /* 홈에서 옮겨 온 계산 근거 */
-  function evidenceSec() {
-    return '<div class="sep"></div>' +
-      '<div class="sec">' +
-        '<div class="sec-title">계산 근거</div>' +
-        '<div class="sec-desc">지금 어떤 값으로 계산하고 있는지 그대로 보여 드립니다.</div>' +
-        '<button class="btn btn-sub" id="s-evidence">공식과 대입값 보기</button>' +
-      '</div>';
   }
 
   function row(id, title, desc, right) {
@@ -158,6 +170,9 @@ var SettingsView = (function () {
 
   function bind() {
     var q = function (id) { return document.getElementById(id); };
+
+    if (q('s-go-home')) q('s-go-home').onclick = function () { App.go('home'); };
+    if (q('s-go-week')) q('s-go-week').onclick = function () { App.go('weekly'); };
 
     [].forEach.call(el.querySelectorAll('#s-skin button'), function (b) {
       b.onclick = function () { SettingsService.set({ skinType: +b.dataset.t }); after(); };
@@ -221,7 +236,7 @@ var SettingsView = (function () {
     };
   }
 
-  /* 계산 근거 — 지금 대입 중인 값 그대로 (홈에서 이곳으로 옮겼다) */
+  /* 계산 근거 — 지금 대입 중인 값 그대로 (홈의 원형 버튼에서도 열린다) */
   function evidenceSheet() {
     var rx = App.prescription();
     if (!rx) return UI.toast('예보를 불러온 뒤에 볼 수 있어요');
@@ -234,7 +249,7 @@ var SettingsView = (function () {
           '비타민D 필요시간 = (k × MED) ÷ (1.5 × UVI × f_BSA)<br>' +
           '화상 한계시간 = (MED × SPF) ÷ (1.5 × UVI)<br>' +
           '열 안전 상한 = 체감온도 구간표<br>' +
-          '<b style="color:#3182F6">최종 = min(세 값)</b>' +
+          '<b style="color:#2B63F6">최종 = min(세 값)</b>' +
         '</div></div>' +
       '<div class="card"><div class="card-t">지금 대입한 값</div><dl class="official" style="margin-top:4px">' +
         dd('k (비타민D/홍반 비율)', Engine.K) +
@@ -263,5 +278,6 @@ var SettingsView = (function () {
     render();
   }
 
-  return { render: render };
+  /* 홈의 원형 버튼에서도 열 수 있게 밖으로 내보낸다 */
+  return { render: render, evidenceSheet: evidenceSheet };
 })();

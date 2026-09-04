@@ -1,12 +1,14 @@
 /* =========================================================
    기능: 노출 타이머 — 뷰(화면)
+
    한 화면 구성: 링 · 지금 상태 · 차림 · 버튼이 처음부터 모두 보인다.
    "나갈게요"를 눌러도 화면이 바뀌지 않고 그 자리에서 카운트가 시작된다.
+   레퍼런스의 결과 화면처럼 큰 링 카드 아래 지표 타일을 둔다.
    ========================================================= */
 var TimerView = (function () {
 
   var el, loop = null, rx = null;
-  var R = 118, C = 2 * Math.PI * R;
+  var R = 113, C = 2 * Math.PI * R;
 
   function render(prescription) {
     rx = prescription;
@@ -33,42 +35,58 @@ var TimerView = (function () {
     var pct = running ? Math.min(1, s.dose) : 0;
 
     el.innerHTML =
-      '<div class="timer-wrap">' +
-        '<div class="top-mode ' + (running ? 'mode-normal' : 'mode-cloudy') +
-             '" style="justify-content:center;margin-bottom:14px">' +
-          '<span class="dot"></span>' + (running ? '노출 중' : '대기 중') +
+      '<div class="hdr">' +
+        '<div class="hdr-l">' +
+          '<div class="hdr-t">노출 타이머</div>' +
+          '<div class="hdr-d">' + (running ? '지금 쬐는 중이에요' : '차림을 바꾸면 즉시 다시 계산돼요') + '</div>' +
         '</div>' +
+        '<div class="hdr-acts">' +
+          '<button class="iconbtn" id="t-home" aria-label="홈으로">' + UI.ICON.back + '</button>' +
+          '<button class="iconbtn" id="t-week" aria-label="기록 보기">' + UI.ICON.week + '</button>' +
+        '</div>' +
+      '</div>' +
 
-        '<div class="ring">' +
-          '<svg width="260" height="260" viewBox="0 0 260 260">' +
-            '<circle cx="130" cy="130" r="' + R + '" fill="none" stroke="#F2F4F6" stroke-width="14"/>' +
-            '<circle id="t-arc" cx="130" cy="130" r="' + R + '" fill="none" stroke="#3182F6" ' +
-              'stroke-width="14" stroke-linecap="round" stroke-dasharray="' + C + '" ' +
-              'stroke-dashoffset="' + (C * (1 - pct)) + '" style="transition:stroke-dashoffset .5s linear"/>' +
-          '</svg>' +
-          '<div class="ring-in">' +
-            '<div class="ring-num" id="t-clock">' + clock(seconds) + '</div>' +
-            '<div class="ring-lab" id="t-lab">' + label(running, s, p) + '</div>' +
-            '<div class="ring-pct" id="t-pct">' + (running ? s.percent + '% 충전' : chargeHint(w)) + '</div>' +
+      '<div class="timer-wrap">' +
+        '<div class="timer-card">' +
+          '<div class="top-mode ' + (running ? 'mode-normal' : 'mode-cloudy') + '">' +
+            '<span class="dot"></span>' + (running ? '노출 중' : '대기 중') +
+          '</div>' +
+
+          '<div class="ring">' +
+            '<svg width="250" height="250" viewBox="0 0 250 250">' +
+              '<defs><pattern id="tring" width="5" height="5" patternUnits="userSpaceOnUse" ' +
+                'patternTransform="rotate(45)">' +
+                '<line x1="0" y1="0" x2="0" y2="5" stroke="#DCE3EE" stroke-width="2.6"/>' +
+              '</pattern></defs>' +
+              '<circle cx="125" cy="125" r="' + R + '" fill="none" stroke="url(#tring)" stroke-width="15"/>' +
+              '<circle id="t-arc" cx="125" cy="125" r="' + R + '" fill="none" stroke="#2B63F6" ' +
+                'stroke-width="15" stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" ' +
+                'stroke-dashoffset="' + (C * (1 - pct)).toFixed(1) + '" ' +
+                'style="transition:stroke-dashoffset .5s linear"/>' +
+            '</svg>' +
+            '<div class="ring-in">' +
+              '<div class="ring-num" id="t-clock">' + clock(seconds) + '</div>' +
+              '<div class="ring-lab" id="t-lab">' + label(running, s, p) + '</div>' +
+              '<div class="ring-pct" id="t-pct">' + (running ? s.percent + '% 충전' : chargeHint(w)) + '</div>' +
+            '</div>' +
           '</div>' +
         '</div>' +
+
+        '<div class="timer-live" id="t-live">' + liveText(running, s, p) + '</div>' +
       '</div>' +
 
-      '<div class="timer-live" id="t-live">' + liveText(running, s, p) + '</div>' +
-
-      gearSec() +
-
-      '<div id="t-act-idle" class="btn-wrap"' + (running ? ' hidden' : '') + '>' +
+      '<div id="t-act-idle" class="btn-wrap" style="margin-top:12px"' + (running ? ' hidden' : '') + '>' +
         '<button class="btn btn-primary" id="t-start">' + UI.ICON.play + '나갈게요</button>' +
       '</div>' +
-      '<div id="t-act-run" class="btn-row" style="margin-top:4px"' + (running ? '' : ' hidden') + '>' +
+      '<div id="t-act-run" class="btn-row" style="margin-top:12px"' + (running ? '' : ' hidden') + '>' +
         '<button class="btn btn-sub" id="t-stop">그만할래요</button>' +
         '<button class="btn btn-primary" id="t-done">다 채웠어요</button>' +
       '</div>' +
 
+      gearSec() +
+
       '<div class="sec">' +
-        '<div class="card">' +
-          '<div class="card-t">🔁 중간에 바꿔도 됩니다</div>' +
+        '<div class="card"><div class="card-t">🔁 중간에 바꿔도 됩니다</div>' +
           '<div class="card-b">옷차림이나 자외선차단제를 바꾸면 남은 시간이 즉시 다시 계산됩니다. ' +
           '지나간 시간은 그때의 조건으로 이미 적립돼 있어요.</div>' +
         '</div>' +
@@ -94,9 +112,11 @@ var TimerView = (function () {
   function gearSec() {
     var p = Repo.getProfile();
     var spfs = [1, 15, 30, 50];
-    return '<div class="sec" style="padding-bottom:12px">' +
-      '<div class="sec-title">지금 차림</div>' +
-      '<div class="sec-desc">바꾸면 바로 다시 계산됩니다.</div>' +
+    return '<div class="sec">' +
+      '<div class="c-head">' +
+        '<div class="c-ico">👕</div>' +
+        '<div class="c-t">지금 차림<small>바꾸면 바로 다시 계산됩니다</small></div>' +
+      '</div>' +
       '<div class="seg" id="t-cloth">' +
         Object.keys(Engine.CLOTHING).map(function (k) {
           return '<button data-c="' + k + '"' + (p.clothing === k ? ' class="on"' : '') + '>' +
@@ -116,6 +136,9 @@ var TimerView = (function () {
   function bind() {
     var q = function (id) { return document.getElementById(id); };
 
+    if (q('t-home')) q('t-home').onclick = function () { App.go('home'); };
+    if (q('t-week')) q('t-week').onclick = function () { App.go('weekly'); };
+
     q('t-start').onclick = function () {
       if (!rx) return UI.toast('예보를 불러오는 중이에요');
       TimerService.start(rx, rx.activeWindow || rx.targetWindow);
@@ -124,8 +147,6 @@ var TimerView = (function () {
       var mode = el.querySelector('.top-mode');
       mode.className = 'top-mode mode-normal';
       mode.innerHTML = '<span class="dot"></span>노출 중';
-      mode.style.justifyContent = 'center';
-      mode.style.marginBottom = '14px';
       update(TimerService.tick());
       startLoop();
     };
@@ -186,19 +207,25 @@ var TimerView = (function () {
     if (arc) arc.setAttribute('stroke-dashoffset', C * (1 - Math.min(1, s.dose)));
   }
 
+  /* 지금 조건 — 세 지표 타일 + 설명 한 줄. 1초마다 다시 그려지므로 항상 최신이다. */
   function liveText(running, s, p) {
-    if (!p) return '예보를 불러오는 중이에요';
-    var head = '지금 UVI <b>' + p.uvi.toFixed(1) + '</b> · 체감 <b>' + p.heatIndexC.toFixed(0) + '℃</b>' +
-               ' · 태양고도 <b>' + p.altitude.toFixed(0) + '°</b>';
-    var need = '<br>이 조건에서 필요한 시간 <b>' + UI.mins(p.vitd) + '</b>';
-    var body = head + need +
+    if (!p) return '<div class="tnote">예보를 불러오는 중이에요</div>';
+
+    var tiles = '<div class="tstats">' +
+      '<div class="tstat on"><b>' + p.uvi.toFixed(1) + '</b><span>자외선지수</span></div>' +
+      '<div class="tstat"><b>' + p.heatIndexC.toFixed(0) + '℃</b><span>체감온도</span></div>' +
+      '<div class="tstat"><b>' + p.altitude.toFixed(0) + '°</b><span>태양고도</span></div>' +
+    '</div>';
+
+    var body = '이 조건에서 필요한 시간 <b>' + UI.mins(p.vitd) + '</b>' +
       (running ? ' · 경과 <b>' + Math.floor(s.elapsedSec / 60) + '분 ' + (s.elapsedSec % 60) + '초</b>' : '');
 
     /* 안전 한계가 목표보다 먼저 오면, 이 차림으로는 목표를 못 채운다는 걸 분명히 말해 준다.
        (노출 면적이 적을수록 필요시간은 길어지는데 화상 한계는 그대로라서 생기는 상황) */
     var cap = capNote(p);
-    if (cap) body += '<br><span style="color:#F04452;font-weight:700">' + cap + '</span>';
-    return body;
+    if (cap) body += '<br><span style="color:#F0475B;font-weight:700">' + cap + '</span>';
+
+    return tiles + '<div class="tnote">' + body + '</div>';
   }
 
   /* 목표(비타민D)보다 먼저 걸리는 한계가 있으면 그 이유와 '해법'을 한 줄로.
