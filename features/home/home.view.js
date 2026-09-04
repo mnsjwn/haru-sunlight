@@ -35,7 +35,7 @@ var HomeView = (function () {
 
     return '<div class="hdr">' +
       '<div class="hdr-l">' +
-        '<div class="hdr-t">오늘의 처방</div>' +
+        '<div class="hdr-t">하루 햇빛</div>' +
         '<div class="hdr-d">' + UI.esc(m.loc.name) + ' · ' + dateShort + '</div>' +
       '</div>' +
       '<div class="hdr-acts">' +

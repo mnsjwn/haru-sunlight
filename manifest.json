@@ -1,6 +1,6 @@
 {
-  "name": "일광 처방",
-  "short_name": "일광처방",
+  "name": "하루 햇빛",
+  "short_name": "하루햇빛",
   "description": "오늘 언제 몇 분 햇빛을 쬐야 비타민D가 채워지는지 계산해 주는 앱",
   "start_url": "./index.html",
   "display": "standalone",
