@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>일광 처방</title>
+<title>하루햇빛</title>
 <!-- 아래 경로는 전부 상대경로다. GitHub Pages는 프로젝트를
      https://사용자이름.github.io/저장소이름/ 형태의 하위 경로로 서비스하므로,
      "/manifest.json"처럼 슬래시로 시작하는 절대경로를 쓰면 실제로는
      https://사용자이름.github.io/manifest.json 을 찾아 404가 난다.
      반드시 이 파일(index.html)과 같은 폴더 기준의 상대경로를 사용한다. -->
-<link rel="icon" type="image/svg+xml" href="icon.svg">
-<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" type="image/svg+xml" href="haru_sunlight.svg">
+<link rel="apple-touch-icon" href="haru_sunlight.svg">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#D97706">
 <meta name="color-scheme" content="light">
@@ -18,7 +18,7 @@
      manifest.json의 display:"standalone"과 같은 역할을 안드로이드/iOS 각각에 대해 보강한다. -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="일광 처방">
+<meta name="apple-mobile-web-app-title" content="하루햇빛">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -334,9 +334,9 @@
   .timer-stats .cell .v{font-size:14px;font-weight:900;color:var(--ink)}
   .timer-stats .cell .l{font-size:10px;font-weight:700;color:var(--gray);margin-top:2px}
 
-  .toggle-row{display:flex;gap:8px}
+  .toggle-row{display:flex;flex-wrap:wrap;gap:8px}
   .chip{
-    flex:1;text-align:center;padding:12px 6px;border-radius:14px;border:2px solid var(--line);
+    flex:1 1 calc(50% - 4px);text-align:center;padding:12px 6px;border-radius:14px;border:2px solid var(--line);
     font-size:12.5px;font-weight:800;color:var(--gray);cursor:pointer;background:#fff;
     min-height:44px;display:flex;align-items:center;justify-content:center;
   }
@@ -444,7 +444,7 @@
     <div class="mark">
       <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.4"></circle><path d="M12 2.4v2.6M12 19v2.6M2.4 12h2.6M19 12h2.6M5.2 5.2l1.9 1.9M16.9 16.9l1.9 1.9M18.8 5.2L16.9 7.1M7.1 16.9l-1.9 1.9"/></svg>
     </div>
-    <div class="wordmark">일광 처방</div>
+    <div class="wordmark">하루햇빛</div>
     <div class="tag">오늘 몇 분 햇빛을 쬐면 비타민D가 채워지는지</div>
   </div>
 
@@ -467,12 +467,11 @@
         <div class="ob-title">위치 정보가 필요해요</div>
       </div>
       <div class="ob-body">
-        <p class="small-muted">일출·일몰·자외선지수·기온을 정확히 계산하려면 현재 위치가 필요합니다. 거부하면 도시 선택으로 대체됩니다.</p>
-        <div id="city-fallback" class="hide" style="margin-top:8px;display:flex;flex-direction:column;gap:8px"></div>
+        <p class="small-muted">일출·일몰·자외선지수·기온을 정확히 계산하려면 위치 권한 허용이 반드시 필요합니다.</p>
+        <p class="small-muted" id="ob-loc-error" style="display:none;margin-top:10px;color:var(--primary-deep);font-weight:700"></p>
       </div>
       <div class="ob-foot" style="display:flex;flex-direction:column;gap:10px">
         <button class="btn" id="ob-loc">위치 권한 허용</button>
-        <button class="btn ghost" id="ob-skip-loc">도시 직접 선택</button>
       </div>
     </div>
   </div>
@@ -485,7 +484,7 @@
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
           <span id="topbar-loc-text"></span>
         </div>
-        <h1 id="topbar-title">일광 처방</h1>
+        <h1 id="topbar-title">하루햇빛</h1>
         <div class="sub" id="topbar-sub"></div>
       </div>
       <!-- 프로필 화면은 원본 앱에 존재하지 않아, 탭 전환 로직을 그대로 재사용해
@@ -546,7 +545,7 @@
    이 앱은 그 워커의 주소만 호출한다. 워커를 배포한 뒤 아래에 그 주소를 채워 넣는다.
    (README.md "3. 기상청 API 프록시(Cloudflare Workers) 배포" 참고)
    ========================================================================================== */
-const KMA_PROXY_BASE = ""; // 예: "https://hauri-haetbit-kma-proxy.내계정.workers.dev" (마지막 슬래시 없이)
+const KMA_PROXY_BASE = "https://blue-scene-d288.ojimin573.workers.dev"; // 예: "https://hauri-haetbit-kma-proxy.내계정.workers.dev" (마지막 슬래시 없이)
 
 /* ==========================================================================================
    §2 엔진 공식 — 상수 (통일 대상: 절대 임의 변경 금지)
@@ -554,9 +553,13 @@ const KMA_PROXY_BASE = ""; // 예: "https://hauri-haetbit-kma-proxy.내계정.wo
 const MED = { I:150, II:250, III:300, IV:400, V:500, VI:600 };   // 최소홍반량(J/m²), 피부타입별
 const K_VITAMIN = 0.4;          // 비타민D/홍반 비율 — 문헌범위 0.3~0.5 중 중앙값(잠정, §10 미확정)
 const UVI_FACTOR = 1.5;         // UVI → 홍반조사량(W/m²) 환산계수, 고정
-const FBSA = { short_short:0.40, short_long:0.25, long_long:0.10 };  // 옷차림별 노출 피부 면적 비율
-const CLOTH_LABELS = ["반팔 + 반바지","반팔 + 긴바지","긴팔 + 긴바지 (얼굴·손만)"];
-const CLOTH_KEYS = ["short_short","short_long","long_long"];
+// long_short(긴팔+반바지)는 short_long(반팔+긴바지)과 대칭 관계다: 기존 값들이
+// 이미 "팔 노출"과 "다리 노출"을 똑같은 비중(0.15)으로 취급하고 있었으므로
+// (0.40 반팔+반바지 = 0.10 기본 + 0.15 팔 + 0.15 다리), 팔을 덮고 다리만 노출하는
+// 이 옷차림도 반팔+긴바지와 같은 0.25가 된다.
+const FBSA = { short_short:0.40, short_long:0.25, long_short:0.25, long_long:0.10 };  // 옷차림별 노출 피부 면적 비율
+const CLOTH_LABELS = ["반팔 + 반바지","반팔 + 긴바지","긴팔 + 반바지","긴팔 + 긴바지 (얼굴·손만)"];
+const CLOTH_KEYS = ["short_short","short_long","long_short","long_long"];
 const SKIN_LABEL = { I:"타입 I", II:"타입 II", III:"타입 III", IV:"타입 IV", V:"타입 V", VI:"타입 VI" };
 
 /* ==========================================================================================
@@ -611,8 +614,13 @@ function computeSlot({ uvi, tempC, rh, skinType, clothKey, spfOn }){
   const fbsa = FBSA[clothKey];
   let vitaminMin = Infinity, burnMin = Infinity;
   if (uvi > 0) {
-    vitaminMin = (K_VITAMIN * med * fbsa) / (UVI_FACTOR * uvi);
-    burnMin    = (med * spf)            / (UVI_FACTOR * uvi);
+    // 비타민D는 "노출된 피부 전체"에서 만들어지는 양을 더한 것이라, 노출 면적(fbsa)이
+    // 작을수록(옷을 많이 가릴수록) 같은 양을 만드는 데 시간이 더 오래 걸린다 — 그래서
+    // fbsa를 나눠준다(예전에는 실수로 곱해서, 옷을 많이 입을수록 시간이 짧아지는
+    // 반대 결과가 나왔었다). 화상은 "노출된 한 부위"가 한계선량에 도달하는지의
+    // 문제라서 다른 부위 노출 여부와 무관하므로 burnMin에는 fbsa를 넣지 않는다.
+    vitaminMin = (K_VITAMIN * med) / (UVI_FACTOR * uvi * fbsa);
+    burnMin    = (med * spf)       / (UVI_FACTOR * uvi);
   }
   const hi = heatIndexC(tempC, rh);
   const heat = heatCap(hi);
@@ -892,8 +900,14 @@ async function fetchForecast(lat, lon){
     && cached.fetchedAt && (Date.now() - cached.fetchedAt) < FORECAST_CACHE_TTL_MS;
   if (cacheFresh) return { data: cached, fromCache: true };
 
+  // 캐시가 있어도 오늘 날짜의 데이터가 아니면 §계산 엔진(computeDayResult)이
+  // 어차피 오늘에 해당하는 슬롯을 하나도 찾지 못해 dayResult가 null이 된다.
+  // 이때 error를 세우지 않고 "괜찮은 옛날 데이터"인 척 내려주면, 홈 화면이
+  // "데이터를 불러오는 중입니다…" 상태에서 영원히 멈춰버린다(실제 발견된 버그).
+  // 그래서 오늘 날짜가 아닌 캐시는 아예 쓸모없는 것으로 보고 에러로 처리한다.
+  const cachedUsableToday = cached && cached.date === today;
   if (!KMA_PROXY_BASE){
-    if (cached) return { data: cached, fromCache: true, stale: true, userMessage: friendlyErrorMessage(new FetchStageError("no-proxy")) };
+    if (cachedUsableToday) return { data: cached, fromCache: true, stale: true, userMessage: friendlyErrorMessage(new FetchStageError("no-proxy")) };
     return { data: null, fromCache: false, error: true, userMessage: friendlyErrorMessage(new FetchStageError("no-proxy")) };
   }
 
@@ -931,7 +945,7 @@ async function fetchForecast(lat, lon){
     return { data: packed, fromCache: false, uvWarning };
   }catch(e){
     const userMessage = friendlyErrorMessage(e);
-    if (cached) return { data: cached, fromCache: true, stale: true, userMessage: userMessage + " 최근 저장된 정보로 대신 보여드릴게요." };
+    if (cachedUsableToday) return { data: cached, fromCache: true, stale: true, userMessage: userMessage + " 최근 저장된 정보로 대신 보여드릴게요." };
     return { data: null, fromCache: false, error: true, userMessage };
   }
 }
@@ -1016,6 +1030,7 @@ const Store = {
   setSeen(v){ saveJSON(LS_KEYS.seen, v); },
   getCache(){ return loadJSON(LS_KEYS.cache, null); },
   setCache(v){ saveJSON(LS_KEYS.cache, v); },
+  clearCache(){ try{ localStorage.removeItem(LS_KEYS.cache); }catch(e){} },
   getHistory(){ return loadJSON(LS_KEYS.history, {}); },
   setHistory(h){ saveJSON(LS_KEYS.history, h); },
   getModeLog(){ return loadJSON(LS_KEYS.modeLog, {}); },
@@ -1048,10 +1063,12 @@ let state = {
    §7 온보딩
    ========================================================================================== */
 const SKIN_OPTS = [
-  { key:"I",   title:"잘 모르겠다",                    sub:"타입 I (기본값)" },
-  { key:"II",  title:"빨개지지만 잘 타지 않는다",     sub:"타입 II" },
-  { key:"III", title:"조금 빨개졌다가 갈색으로 탄다",   sub:"타입 III" },
-  { key:"IV",  title:"빨개지지 않지만 잘 탄다",         sub:"타입 IV" }
+  { key:"I",   title:"잘 모르겠다",                       sub:"타입 I (기본값)" },
+  { key:"II",  title:"빨개지지만 잘 타지 않는다",        sub:"타입 II" },
+  { key:"III", title:"조금 빨개졌다가 갈색으로 탄다",      sub:"타입 III" },
+  { key:"IV",  title:"빨개지지 않지만 잘 탄다",            sub:"타입 IV" },
+  { key:"V",   title:"아주 드물게 빨개지고 아주 잘 탄다",  sub:"타입 V" },
+  { key:"VI",  title:"거의 화상을 입지 않는다",            sub:"타입 VI" }
 ];
 /* 모바일에서는 GPS 콜드스타트(첫 위치 요청)가 실내·약전파 환경에서 8초를
    넘기는 경우가 흔하다. HTTPS(GitHub Pages)에서만 geolocation이 동작하므로
@@ -1086,14 +1103,6 @@ function registerServiceWorker(){
 }
 registerServiceWorker();
 
-const CITY_OPTS = [
-  { name:"서울", lat:37.5665, lon:126.9780 },
-  { name:"부산", lat:35.1796, lon:129.0756 },
-  { name:"대구", lat:35.8714, lon:128.6014 },
-  { name:"인천", lat:37.4563, lon:126.7052 },
-  { name:"광주", lat:35.1595, lon:126.8526 },
-  { name:"제주", lat:33.4996, lon:126.5312 }
-];
 
 function renderSkinOptions(){
   const wrap = document.getElementById("skin-options");
@@ -1106,22 +1115,9 @@ function renderSkinOptions(){
     wrap.appendChild(el);
   });
 }
-function renderCityFallback(){
-  const wrap = document.getElementById("city-fallback");
-  wrap.innerHTML = "";
-  CITY_OPTS.forEach(c=>{
-    const b = document.createElement("button");
-    b.className = "btn secondary";
-    b.style.justifyContent = "flex-start";
-    b.style.paddingLeft = "18px";
-    b.textContent = c.name;
-    b.onclick = ()=> finishOnboarding(c.lat, c.lon, c.name);
-    wrap.appendChild(b);
-  });
-}
-function finishOnboarding(lat, lon, cityName){
+function finishOnboarding(lat, lon){
   const skin = SKIN_OPTS[state.obSkin].key;
-  const profile = { skinType: skin, lat, lon, cityName: cityName || "현재 위치" };
+  const profile = { skinType: skin, lat, lon, cityName: "현재 위치" };
   state.profile = profile;
   Store.setProfile(profile);
   Store.setSeen(true);
@@ -1132,15 +1128,23 @@ document.getElementById("ob-next1").onclick = ()=>{
   document.getElementById("ob-step1").classList.add("hide");
   document.getElementById("ob-step2").classList.remove("hide");
 };
+// 위치는 오직 GPS(Geolocation API)로만 받는다 — 수동 도시 선택 UI는 존재하지 않는다.
+// 실패(권한 거부·시간 초과·비보안 컨텍스트) 시에도 도시 목록으로 대체하지 않고,
+// 같은 화면에서 원인을 안내한 뒤 "위치 권한 허용" 버튼으로 다시 시도하게 한다.
 document.getElementById("ob-loc").onclick = ()=>{
-  if (!navigator.geolocation){ document.getElementById("city-fallback").classList.remove("hide"); return; }
+  const errEl = document.getElementById("ob-loc-error");
+  const showErr = (msg)=>{ if (errEl){ errEl.textContent = msg; errEl.style.display = "block"; } };
+  if (errEl) errEl.style.display = "none";
+  if (!navigator.geolocation){
+    showErr("이 브라우저에서는 위치 정보를 지원하지 않습니다. HTTPS 주소로 접속했는지 확인해 주세요.");
+    return;
+  }
   navigator.geolocation.getCurrentPosition(
-    pos => finishOnboarding(pos.coords.latitude, pos.coords.longitude, null),
-    ()=> document.getElementById("city-fallback").classList.remove("hide"),
+    pos => finishOnboarding(pos.coords.latitude, pos.coords.longitude),
+    ()=> showErr("위치 정보를 가져오지 못했습니다. 기기·브라우저 설정에서 위치 권한을 허용한 뒤 다시 시도해 주세요."),
     GEO_OPTS
   );
 };
-document.getElementById("ob-skip-loc").onclick = ()=> document.getElementById("city-fallback").classList.remove("hide");
 
 /* ==========================================================================================
    유틸
@@ -1220,7 +1224,7 @@ function weatherCardHTML(){
 
 function modeBannerHTML(day){
   if (day.mode === "winter"){
-    return `<div class="banner winter">☁️ <b>겨울 모드</b> — 오늘은 태양고도가 하루 종일 45°를 넘지 않아 비타민D 합성이 불가능합니다. 아래 식이 대체를 참고하세요. 창가에 앉아 있으면 비타민D는 채워지지 않지만(자외선B는 유리에 차단됨), 생체리듬에는 도움이 될 수 있습니다 <span class="badge-todo">축2 포함 여부 미정</span></div>`;
+    return `<div class="banner winter">☁️ <b>겨울 모드</b> — 오늘은 해가 하루 종일 낮게 떠 있어 비타민D를 만들 수 없습니다. 아래 식이 대체를 참고하세요. 창가에 앉아 있으면 비타민D는 채워지지 않지만(자외선은 유리에 막힘), 생체리듬에는 도움이 될 수 있습니다 <span class="badge-todo">참고용</span></div>`;
   }
   if (day.mode === "heatwave"){
     return `<div class="banner heat">🔥 <b>폭염 모드</b> — 오늘은 체감온도가 높아 오전 창만 제시됩니다. 정오·오후는 열 위험이 높아 아예 표시하지 않습니다.</div>`;
@@ -1266,7 +1270,12 @@ function modeLabel(m){ return { winter:"겨울", heatwave:"폭염", rain:"장마
 function renderHome(){
   const el = document.getElementById("tab-home");
   const day = state.dayResult;
-  if (state.fetchInfo && state.fetchInfo.error && !day){
+  // state.fetchInfo가 있다는 건 fetchForecast()가 이미 한 번 끝났다는 뜻이다.
+  // 그런데도 day(오늘 계산 결과)가 없다면, 원인이 error:true든 아니든(예: 캐시는
+  // 받았지만 오늘 날짜와 안 맞아 슬롯이 0개인 경우) 사용자 입장에서는 똑같이
+  // "오늘 처방을 못 받았다"는 뜻이므로, "불러오는 중"에 영원히 머무르지 않도록
+  // 항상 재시도 버튼이 있는 화면을 보여준다.
+  if (state.fetchInfo && !day){
     const msg = (state.fetchInfo.userMessage || "날씨 데이터를 불러오지 못했습니다. 네트워크 연결을 확인한 뒤 다시 시도해 주세요.").replace(/\n/g, "<br>");
     el.innerHTML = `<div class="card"><h3>오늘의 처방</h3><p class="small-muted">${msg}</p><button class="btn sm secondary" id="retry-fetch" style="margin-top:12px">다시 시도</button></div>`;
     const btn = document.getElementById("retry-fetch");
@@ -1299,7 +1308,7 @@ function renderHome(){
       <div class="breakdown-row"><div class="label"><span class="dot ${w.limitedBy==='burn'?'hit':''}"></span>화상 한계시간</div><div class="val">${Number.isFinite(w.burnMin)?Math.round(w.burnMin):"—"}분</div></div>
       <div class="breakdown-row"><div class="label"><span class="dot ${w.limitedBy==='heat'?'hit':''}"></span>열 안전 상한</div><div class="val">${Number.isFinite(w.heatMax)?Math.round(w.heatMax)+"분":"제한없음"}</div></div>
       ${w.heatMsg? `<div class="disclaim">🌡 ${w.heatMsg}</div>`:""}
-      <div class="formula-note">노출시간 = 최솟값(비타민D 필요, 화상 한계, 열 안전 상한) · k=0.4(잠정), UVI 환산계수=1.5</div>
+      <div class="formula-note">오늘의 권장 시간은 위 세 가지 시간 중 가장 짧은 시간으로 정해집니다.</div>
     </div>`;
   } else {
     heroInner = `
@@ -1405,10 +1414,10 @@ function dietSupplementCard(){
   const supplementOn = state.settings.supplementOn;
   return `
     <div class="card">
-      <h3>식이 대체 / 보충제 기준</h3>
-      <p class="small-muted">→ 연어 100g · 고등어 100g · 달걀 3개로 부족분을 보완할 수 있습니다.</p>
-      <p class="small-muted" style="margin-top:10px">→ 보충제를 고려할 구간입니다. 한국인 영양소 섭취기준: 성인 충분섭취량 <b>400 IU/일</b> · 상한 <b>4,000 IU/일</b>. 이는 앱이 권장하는 용량이 아니라 공식 기준을 그대로 안내하는 것입니다.</p>
-      ${supplementOn ? `<p class="small-muted" style="margin-top:10px;color:var(--warn)">→ 설정에서 보충제 복용 중으로 표시되어 있습니다. 햇빛 합성분과 보충제를 합산하면 상한 4,000 IU/일을 넘을 수 있으니 섭취량을 확인하세요. <span class="badge-todo">정확한 합산 IU 계산은 환산계수 미정</span></p>` : ""}
+      <h3>음식으로 보충하기 / 보충제 기준</h3>
+      <p class="small-muted">→ 연어 100g · 고등어 100g · 달걀 3개로 부족한 양을 보완할 수 있습니다.</p>
+      <p class="small-muted" style="margin-top:10px">→ 보충제를 고려해볼 만한 상황입니다. 한국인 영양소 섭취기준: 성인 하루 권장량 <b>400 IU</b> · 하루 상한 <b>4,000 IU</b>. 이는 앱이 정한 것이 아니라 공식 기준을 그대로 안내하는 것입니다.</p>
+      ${supplementOn ? `<p class="small-muted" style="margin-top:10px;color:var(--warn)">→ 설정에서 보충제를 먹고 있다고 표시해두셨네요. 햇빛으로 만들어진 양에 보충제 양을 더하면 하루 상한 4,000 IU를 넘을 수 있으니 섭취량을 확인해 보세요. <span class="badge-todo">참고용</span></p>` : ""}
     </div>
   `;
 }
@@ -1454,7 +1463,7 @@ function fireNotification(title, body){
       // 데스크톱/안드로이드 크롬도 이 경로로 정상 동작하므로 항상 우선 시도한다.
       navigator.serviceWorker.ready.then(reg=>{
         if (reg && reg.showNotification){
-          reg.showNotification(title, { body, icon:"icon.svg", badge:"icon.svg" });
+          reg.showNotification(title, { body, icon:"haru_sunlight.svg", badge:"haru_sunlight.svg" });
         } else {
           new Notification(title, { body });
         }
@@ -1522,11 +1531,11 @@ function renderTimer(){
       <div class="toggle-row">
         ${CLOTH_LABELS.map((l,i)=>`<div class="chip ${state.settings.clothIdx===i?'on':''}" data-cloth="${i}" role="button" tabindex="0">${l}</div>`).join("")}
       </div>
-      <p class="disclaim">§2: 옷차림별 노출 피부 면적 비율(f_BSA)이 달라져 필요 시간이 즉시 재계산됩니다.</p>
+      <p class="disclaim">옷차림에 따라 햇빛에 노출되는 피부 면적이 달라져서, 필요한 시간이 바로 다시 계산돼요.</p>
     </div>
     <div class="card">
       <div class="row"><h3 style="margin:0">선크림(SPF) 발랐어요</h3><div class="switch ${state.settings.spfOn?'on':''}" id="spf-switch" role="switch" aria-checked="${state.settings.spfOn}" tabindex="0" aria-label="선크림(SPF) 발랐어요"></div></div>
-      <p class="disclaim">토글을 켜면 SPF 30 기준으로 화상 한계시간을 재계산합니다(§2: 안 바르면 SPF=1). 옷차림·SPF를 바꾸면 남은 시간이 즉시 갱신됩니다.</p>
+      <p class="disclaim">켜두면 SPF 30을 바른 것으로 보고 화상 한계시간을 다시 계산해요(꺼두면 안 바른 것으로 계산). 옷차림이나 선크림 여부를 바꾸면 남은 시간이 바로 업데이트됩니다.</p>
     </div>
   `;
 
@@ -1670,11 +1679,14 @@ function renderWeek(){
   const history = Store.getHistory();
   const modeLog = Store.getModeLog();
   const today = new Date();
+  const todayKey = today.toISOString().slice(0,10);
+  const daysSinceMonday = (today.getDay()+6)%7; // 월=0, 화=1, ..., 일=6
+  const monday = new Date(today); monday.setDate(monday.getDate()-daysSinceMonday);
   const days = [];
-  for (let i=6;i>=0;i--){
-    const d = new Date(today); d.setDate(d.getDate()-i);
+  for (let i=0;i<7;i++){
+    const d = new Date(monday); d.setDate(d.getDate()+i);
     const key = d.toISOString().slice(0,10);
-    days.push({ label: ["일","월","화","수","목","금","토"][d.getDay()], ratio: history[key]||0, dateLabel: `${d.getMonth()+1}/${d.getDate()}`, isToday: i===0 });
+    days.push({ label: ["월","화","수","목","금","토","일"][i], ratio: history[key]||0, dateLabel: `${d.getMonth()+1}/${d.getDate()}`, isToday: key===todayKey });
   }
   const noWindowStreak = countNoWindowStreak(modeLog);
   // Figma 디자인은 "총 노출시간"까지 요약 뱃지로 보여주지만, 원본 데이터 구조(Store.history)는
@@ -1719,17 +1731,17 @@ function renderWeek(){
         ${dietSupplementCardBody()}
       </div>` : ""}
     <div class="card">
-      <h3>축 2 — 생체리듬 <span class="badge-todo">미정</span></h3>
-      <p class="small-muted">개발 명세 §6·§10: 생체리듬 축 포함 여부는 아직 팀 내에서 결정되지 않았습니다. 포함될 경우 기상시각 기준 Tmin(심부체온 최저점)으로 빛 노출의 위상 전진/지연을 안내할 예정이며, 현재 계산·추천에는 반영되어 있지 않습니다.</p>
+      <h3>생체리듬 <span class="badge-todo">준비 중</span></h3>
+      <p class="small-muted">기상 시각에 맞춰 햇빛 노출 타이밍을 알려주는 기능을 준비하고 있어요. 아직 오늘의 추천 시간 계산에는 포함되어 있지 않습니다.</p>
     </div>
   `;
 }
 function dietSupplementCardBody(){
   const supplementOn = state.settings.supplementOn;
   return `
-    <p class="small-muted">→ 연어 100g · 고등어 100g · 달걀 3개로 부족분을 보완할 수 있습니다.</p>
-    <p class="small-muted" style="margin-top:10px">→ 보충제를 고려할 구간입니다. 한국인 영양소 섭취기준: 성인 충분섭취량 <b>400 IU/일</b> · 상한 <b>4,000 IU/일</b>.</p>
-    ${supplementOn ? `<p class="small-muted" style="margin-top:10px;color:var(--warn)">→ 보충제 복용 중으로 설정되어 있습니다. 합산 상한 초과 여부를 확인하세요. <span class="badge-todo">정확한 합산 IU 계산 미정</span></p>` : ""}
+    <p class="small-muted">→ 연어 100g · 고등어 100g · 달걀 3개로 부족한 양을 보완할 수 있습니다.</p>
+    <p class="small-muted" style="margin-top:10px">→ 보충제를 고려해볼 만한 상황입니다. 한국인 영양소 섭취기준: 성인 하루 권장량 <b>400 IU</b> · 하루 상한 <b>4,000 IU</b>.</p>
+    ${supplementOn ? `<p class="small-muted" style="margin-top:10px;color:var(--warn)">→ 보충제를 먹고 있다고 설정해두셨네요. 하루 상한을 넘지 않는지 확인해 보세요. <span class="badge-todo">참고용</span></p>` : ""}
   `;
 }
 /** modeLog(§4 실제 계산 결과 로그)를 바탕으로 한 정확한 연속 무창일 스트릭 */
@@ -1763,11 +1775,10 @@ function renderSettings(){
       </div>
       <div class="set-row">
         <div class="l">위치</div>
-        <select id="set-city">
-          ${CITY_OPTS.map(c=>`<option value="${c.name}" ${p.cityName===c.name?"selected":""}>${c.name}</option>`).join("")}
-          <option value="__current__" ${!p.cityName || p.cityName==="현재 위치" ? "selected":""}>현재 위치(GPS)</option>
-        </select>
+        <div class="r">${p.cityName || "현재 위치"}</div>
       </div>
+      <button class="btn sm secondary" id="set-loc-refresh" style="margin-top:10px">위치 다시 가져오기</button>
+      <p class="set-note">위치는 자동으로만 가져옵니다. 도시를 직접 고르는 기능은 없어요.</p>
       <div class="set-row">
         <div class="l">옷차림</div>
         <div class="r">${CLOTH_LABELS[s.clothIdx]}</div>
@@ -1780,12 +1791,16 @@ function renderSettings(){
     </div>
 
     <div class="card">
-      <h3>축 2 관련 입력 <span class="badge-todo">미정</span></h3>
+      <h3>기상 시각 <span class="badge-todo">준비 중</span></h3>
       <div class="set-row">
-        <div class="l">기상 시각</div>
-        <input type="time" id="set-wake" value="${s.wakeTime || ""}">
+        <div class="l">일어나는 시각</div>
+        <div class="stepper">
+          <button type="button" id="set-wake-down" aria-label="30분 앞당기기">▾</button>
+          <input type="time" id="set-wake" value="${s.wakeTime || ""}">
+          <button type="button" id="set-wake-up" aria-label="30분 늦추기">▴</button>
+        </div>
       </div>
-      <p class="set-note">§7·§10: 생체리듬(축 2) 포함 여부가 아직 결정되지 않아, 이 값은 저장만 되고 현재 노출시간 계산에는 사용되지 않습니다.</p>
+      <p class="set-note">▾▴ 버튼으로 30분 단위로 조정하거나, 시간을 직접 눌러 원하는 시각을 입력할 수 있어요.</p>
     </div>
 
     <div class="card">
@@ -1807,7 +1822,7 @@ function renderSettings(){
 
     <div class="card">
       <h3>기타</h3>
-      <button class="btn secondary" id="reset-ob">온보딩 다시 하기</button>
+      <button class="btn secondary" id="reset-ob">처음 설정 다시 하기</button>
     </div>
     <p class="disclaim">
       이 앱은 공식(비타민D 필요시간 · 화상 한계시간 · 열 안전 상한)의 최솟값으로 오늘의 노출 시간을 안내합니다.
@@ -1820,19 +1835,40 @@ function renderSettings(){
     Store.setProfile(state.profile);
     applyConditionChangeToTimer();
   };
-  document.getElementById("set-city").onchange = (e)=>{
-    const v = e.target.value;
-    if (v === "__current__"){
-      if (!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(pos=>{
-        state.profile.lat = pos.coords.latitude; state.profile.lon = pos.coords.longitude; state.profile.cityName = "현재 위치";
-        Store.setProfile(state.profile); boot(); // 위치가 바뀌면 예보를 다시 받아야 하므로 boot()가 recomputeDay까지 처리
-      }, ()=> showToast("위치 권한을 가져오지 못했습니다."), GEO_OPTS);
-      return;
-    }
-    const c = CITY_OPTS.find(c=>c.name===v);
-    if (c){ state.profile.lat=c.lat; state.profile.lon=c.lon; state.profile.cityName=c.name; Store.setProfile(state.profile); boot(); }
+  document.getElementById("set-loc-refresh").onclick = (e)=>{
+    if (!navigator.geolocation){ showToast("이 브라우저에서는 위치 정보를 지원하지 않습니다."); return; }
+    // 이 버튼은 [설정] 탭 안에서 눌리는데, boot()가 맨 처음 보여주는 "불러오는 중"
+    // 화면은 [홈] 탭에만 그려진다. 그래서 설정 탭을 보고 있을 땐 아무 반응이 없는
+    // 것처럼 보였다(실제 버그) — 버튼 자체에 눈에 보이는 진행 상태를 표시해 고친다.
+    const btn = e.currentTarget;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "위치 가져오는 중…";
+    const restore = ()=>{ btn.disabled = false; btn.textContent = originalText; };
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      state.profile.lat = pos.coords.latitude; state.profile.lon = pos.coords.longitude; state.profile.cityName = "현재 위치";
+      Store.setProfile(state.profile);
+      Store.clearCache(); // 사용자가 직접 누른 새로고침이므로 캐시된(오래됐거나 잘못됐을 수 있는) 예보를 버리고 무조건 새로 받아온다
+      await boot(); // 위치가 바뀌면 예보를 다시 받아야 하므로 boot()가 recomputeDay까지 처리
+      // boot()가 끝나면 state.tab==="settings"일 때 renderSettings()를 다시 그려서
+      // 버튼이 원래 모습으로 자연히 복원되지만, 혹시 다른 탭으로 옮겨간 사이라면
+      // 여기서도 한 번 더 되돌려 놓는다.
+      restore();
+      showToast("위치를 새로 가져왔습니다.", 3000);
+    }, ()=>{
+      restore();
+      showToast("위치 권한을 가져오지 못했습니다. 기기 설정에서 위치 권한을 허용해 주세요.");
+    }, GEO_OPTS);
   };
+  function stepWakeTime(deltaMin){
+    const el = document.getElementById("set-wake");
+    const [h,m] = (el.value || "07:00").split(":").map(Number);
+    const total = ((h*60+m+deltaMin) % 1440 + 1440) % 1440;
+    el.value = String(Math.floor(total/60)).padStart(2,"0") + ":" + String(total%60).padStart(2,"0");
+    el.dispatchEvent(new Event("change")); // 기존 onchange 로직을 그대로 재사용(중복 구현 안 함)
+  }
+  document.getElementById("set-wake-down").onclick = ()=> stepWakeTime(-30);
+  document.getElementById("set-wake-up").onclick = ()=> stepWakeTime(30);
   document.getElementById("set-wake").onchange = (e)=>{
     state.settings.wakeTime = e.target.value; Store.setSettings(state.settings);
   };
@@ -1886,7 +1922,7 @@ document.querySelectorAll(".tab").forEach(btn=>{
     state.tab = btn.dataset.tab;
     document.querySelectorAll(".screen").forEach(s=>s.classList.add("hide"));
     document.getElementById("tab-"+state.tab).classList.remove("hide");
-    const titles = { home:["일광 처방",""], timer:["타이머","옷차림·SPF 즉시 반영"], week:["주간","충전률 · 이력"], settings:["설정",""] };
+    const titles = { home:["하루햇빛",""], timer:["타이머","옷차림·SPF 즉시 반영"], week:["주간","충전률 · 이력"], settings:["설정",""] };
     document.getElementById("topbar-title").textContent = titles[state.tab][0];
     document.getElementById("topbar-sub").textContent = titles[state.tab][1];
     updateTopbarLoc();
@@ -1919,12 +1955,21 @@ async function boot(){
   document.getElementById("shell").classList.remove("hide");
   updateTopbarLoc();
   renderHome();
-  const result = await fetchForecast(state.profile.lat, state.profile.lon);
-  state.forecast = result.data;
-  state.fetchInfo = result;
-  if (result.userMessage && result.data) showToast(result.userMessage, 5000);
-  else if (result.uvWarning) showToast(result.uvWarning, 4000);
-  recomputeDay();
+  // fetchForecast() 자체는 항상 정상적으로 끝나도록 짜여 있지만(실패해도 예외를
+  // 던지지 않고 error:true를 돌려줌), 혹시 이후 단계(recomputeDay 등)에서
+  // 예상 못 한 예외가 나더라도 "데이터를 불러오는 중입니다…" 화면에 영원히
+  // 멈춰 있지 않도록 try/catch로 감싸 항상 재시도 버튼이 뜨게 한다.
+  try{
+    const result = await fetchForecast(state.profile.lat, state.profile.lon);
+    state.forecast = result.data;
+    state.fetchInfo = result;
+    if (result.userMessage && result.data) showToast(result.userMessage, 5000);
+    else if (result.uvWarning) showToast(result.uvWarning, 4000);
+    recomputeDay();
+  }catch(e){
+    state.fetchInfo = { data: null, error: true, userMessage: "오늘의 처방을 불러오는 중 문제가 생겼습니다. 다시 시도해 주세요." };
+    state.dayResult = null;
+  }
   if (state.tab==="home") renderHome();
   if (state.tab==="timer") renderTimer();
   if (state.tab==="week") renderWeek();
@@ -1933,7 +1978,6 @@ async function boot(){
 
 function start(){
   renderSkinOptions();
-  renderCityFallback();
 
   const seen = Store.getSeen();
   setTimeout(()=>{
