@@ -106,7 +106,8 @@ var SettingsView = (function () {
           '태양고도 NOAA SPA · 체감온도 NOAA Heat Index · 섭취기준 보건복지부(2020)' +
         '</div></div>' +
         '<div style="text-align:center;font-size:11px;color:#AEB8C7;margin-top:14px;line-height:1.6">' +
-          '이 앱은 의학적 진단·처방을 대신하지 않습니다</div>' +
+          '이 앱은 의학적 진단·처방을 대신하지 않습니다<br>' +
+          '빌드 09/07 22:48</div>' +
       '</div>';
 
     bind();
