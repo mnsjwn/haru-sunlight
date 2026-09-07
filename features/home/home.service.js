@@ -210,7 +210,7 @@ var HomeService = (function () {
          왜 창이 없는지(야간·장마·며칠째)는 아래 note가 이미 설명하므로
          제목에서 상태를 되풀이하지 않는다. */
       title: '음식으로 대체 수단',
-      subtitle: '햇빛으로 못 채운 몫을 음식으로 채우는 방법',
+      subtitle: '아래 음식으로 대신 채우세요',
       missDays: miss,
       weeklyPercent: weekly.percent,
       foods: FOODS,
@@ -218,24 +218,9 @@ var HomeService = (function () {
       showSupplementWarning: supplement,
       supplementWarning: '보충제를 드시는 중이라고 하셨어요. ' +
         '햇빛으로 만든 양과 보충제 섭취량은 합산해서 상한(4,000 IU/일)을 넘지 않아야 합니다.',
-      note: rx.hasDaytimeData === false
-        ? (rx.isNightNow
-            ? '해가 진 뒤라 오늘 채울 수 있는 몫은 끝났습니다. 그날 못 채운 만큼은 아래로 보완하세요.'
-            : '기상청 발표 시각 기준으로 오늘 낮 예보가 아직 없습니다. 아침에 다시 확인해 주세요.')
-        : rx.mode.id === 'winter'
-        ? '겨울에는 태양고도가 낮아 UVB가 대기를 통과하지 못합니다. 이 기간에는 합성 자체가 되지 않아요.'
-        : rx.mode.id === 'heat'
-        ? '오늘 최고 체감온도가 ' + rx.maxHeatIndexC.toFixed(0) + '℃까지 올라 열 안전 상한에 걸렸습니다. 자외선이 없는 게 아니라 더위 때문에 창을 닫았어요.'
-        : cloudNote(rx)
+      note: '오늘은 햇빛으로 비타민D를 채우지 못했어요. ' +
+            '<b>아래 음식으로 대신 채우세요.</b> 연어·고등어·달걀에 비타민D가 들어 있습니다.'
     };
-  }
-
-  /* 기상청은 청천 UV를 주지 않아 구름이 몇 % 깎았는지는 계산할 수 없다.
-     대신 실측 UV 자체가 낮다는 사실만 전달한다. */
-  function cloudNote(rx) {
-    var peakUvi = rx.scanned.reduce(function (m, p) { return Math.max(m, p.uvi); }, 0);
-    return '오늘 최고 자외선지수가 ' + peakUvi.toFixed(1) +
-      '로 낮아 필요한 시간이 60분을 넘어갑니다. 그래서 창을 내지 않았어요.';
   }
 
   /* §6 축 2 — 생체리듬 */
