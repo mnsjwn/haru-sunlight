@@ -5,12 +5,61 @@
    ========================================================= */
 var HomeService = (function () {
 
-  /* §5 식이 대체 — 용량 지시 없음. 공식 기준 수치만 인용 */
+  /* §5 식이 대체 — 용량 지시 없음.
+     식품별 IU를 못 박지 않는 이유: 같은 생선도 자연산·양식, 부위, 조리법에 따라
+     함량이 몇 배씩 갈린다(고등어만 해도 자료별로 2.1~16 μg/100g). 숫자를 하나로
+     찍으면 틀린 정보가 되므로, 어떤 음식이 공급원인지와 상대적 함량만 전한다.
+     정확한 값은 식품안전나라 식품영양성분 DB를 안내한다. */
   var FOODS = [
-    { emoji: '🐟', name: '연어 100g' },
-    { emoji: '🐠', name: '고등어 100g' },
-    { emoji: '🥚', name: '달걀 3개' }
+    {
+      group: '생선 · 해산물',
+      note: '비타민D 공급원 중 함량이 가장 높습니다',
+      items: [
+        { emoji: '🍣', name: '연어',        top: true },
+        { emoji: '🐟', name: '고등어',      top: true },
+        { emoji: '🐠', name: '꽁치',        top: true },
+        { emoji: '🥫', name: '정어리 통조림' },
+        { emoji: '🐟', name: '청어' },
+        { emoji: '🍢', name: '장어' },
+        { emoji: '🥫', name: '참치 통조림' },
+        { emoji: '🐟', name: '송어' },
+        { emoji: '🦐', name: '새우' }
+      ]
+    },
+    {
+      group: '버섯',
+      /* 버섯의 에르고스테롤이 자외선을 받아 비타민D2로 바뀐다.
+         사람 피부와 원리가 같아서, 이 앱에서 특히 말해 줄 만한 사실이다. */
+      note: '햇볕에 말린 것만 — 버섯도 햇빛을 받아야 비타민D가 생겨요',
+      items: [
+        { emoji: '🍄', name: '말린 표고',  top: true },
+        { emoji: '🍄', name: '목이버섯',   top: true },
+        { emoji: '🍄', name: '양송이' },
+        { emoji: '🍄', name: '느타리' }
+      ]
+    },
+    {
+      group: '알 · 유제품',
+      note: '생선만큼은 아니지만 매일 먹기 쉬운 쪽입니다',
+      items: [
+        { emoji: '🥚', name: '달걀 노른자' },
+        { emoji: '🥛', name: '강화 우유' },
+        { emoji: '🥤', name: '강화 두유' },
+        { emoji: '🧀', name: '치즈' }
+      ]
+    },
+    {
+      group: '그 밖에',
+      items: [
+        { emoji: '🥣', name: '강화 시리얼' },
+        { emoji: '🧴', name: '대구 간유' },
+        { emoji: '🍖', name: '소·돼지 간' }
+      ]
+    }
   ];
+  /* 위 목록에 함께 붙이는 단서 — 숫자를 안 적는 이유를 그대로 밝힌다 */
+  var FOODS_CAVEAT = '같은 생선도 자연산·양식, 조리법에 따라 함량이 몇 배씩 차이 납니다. ' +
+    '정확한 값은 식품안전나라 <b>식품영양성분 DB</b>에서 확인하세요.';
   var OFFICIAL = {
     source: '한국인 영양소 섭취기준(2020) · 보건복지부',
     rows: [
@@ -214,12 +263,13 @@ var HomeService = (function () {
       missDays: miss,
       weeklyPercent: weekly.percent,
       foods: FOODS,
+      foodsCaveat: FOODS_CAVEAT,
       official: OFFICIAL,
       showSupplementWarning: supplement,
       supplementWarning: '보충제를 드시는 중이라고 하셨어요. ' +
         '햇빛으로 만든 양과 보충제 섭취량은 합산해서 상한(4,000 IU/일)을 넘지 않아야 합니다.',
-      note: '오늘은 햇빛으로 비타민D를 채우지 못했어요. ' +
-            '<b>아래 음식으로 대신 채우세요.</b> 연어·고등어·달걀에 비타민D가 들어 있습니다.'
+      /* 어떤 음식인지는 바로 아래 목록이 말한다 — 여기서 몇 개만 예로 드는 건 군더더기 */
+      note: '오늘은 햇빛으로 비타민D를 채우지 못했어요. <b>아래 음식으로 대신 채우세요.</b>'
     };
   }
 
@@ -260,7 +310,7 @@ var HomeService = (function () {
   }
 
   return {
-    FOODS: FOODS, OFFICIAL: OFFICIAL,
+    FOODS: FOODS, FOODS_CAVEAT: FOODS_CAVEAT, OFFICIAL: OFFICIAL,
     build: build, limits: limits, record: record
   };
 })();

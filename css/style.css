@@ -325,6 +325,27 @@ svg { display:block; flex:none; }
 .win-min small { font-size:12px; font-weight:700; color:var(--g500); margin-left:1px; }
 .win-item.best .win-min { color:var(--blue); }
 
+/* ---------- 대체 음식 목록 (분류 + 칩) ---------- */
+.fgroup { margin-top:14px; }
+.fgroup:first-of-type { margin-top:4px; }
+.fgroup-t { font-size:13px; font-weight:800; color:var(--g800); letter-spacing:-.3px; }
+.fgroup-t small { display:block; font-size:11.5px; font-weight:600; color:var(--g500);
+  margin-top:3px; letter-spacing:-.2px; line-height:1.45; }
+.fchips { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+.fchip {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:7px 11px 7px 8px; border-radius:var(--r-pill);
+  background:var(--surface-2); font-size:12.5px; font-weight:700;
+  color:var(--g700); letter-spacing:-.2px;
+}
+.fchip em { font-style:normal; font-size:14px; line-height:1; }
+/* 함량이 특히 높은 것 */
+.fchip.top { background:var(--blue-l); color:var(--blue-d); }
+.fnote { margin-top:16px; padding:11px 13px; background:var(--surface-2);
+  border-radius:var(--r-in); font-size:11.5px; font-weight:600;
+  color:var(--g500); line-height:1.6; letter-spacing:-.2px; }
+.fnote b { color:var(--g700); font-weight:800; }
+
 /* ---------- 그래프 ---------- */
 .chart-wrap { padding:2px 0 0; }
 .chart-legend { display:flex; gap:13px; padding:0 0 10px; }

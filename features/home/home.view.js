@@ -142,14 +142,31 @@ var HomeView = (function () {
         '<div class="c-t">' + g.title + '<small>' + g.subtitle + '</small></div>' +
       '</div>' +
       '<div class="sec-desc" style="margin-bottom:12px">' + g.note + '</div>' +
-      '<div class="food">' + g.foods.map(function (f) {
-        return '<div class="food-i"><em>' + f.emoji + '</em><span>' + f.name + '</span></div>';
-      }).join('') + '</div>' +
+      foodGroups(g) +
       (g.showSupplementWarning
         ? '<div class="card warn" style="margin-top:12px"><div class="card-t">⚠️ 합산 상한 주의</div>' +
           '<div class="card-b">' + g.supplementWarning + '</div></div>'
         : '') +
     '</div>';
+  }
+
+  /* 비타민D가 든 음식 — 분류별 칩 목록.
+     함량이 특히 높은 것은 파랗게 표시한다(정확한 IU는 적지 않는다 —
+     같은 생선도 자연산·양식·조리법에 따라 몇 배씩 갈리기 때문). */
+  function foodGroups(g) {
+    return g.foods.map(function (grp) {
+      return '<div class="fgroup">' +
+        '<div class="fgroup-t">' + grp.group +
+          (grp.note ? '<small>' + grp.note + '</small>' : '') +
+        '</div>' +
+        '<div class="fchips">' +
+          grp.items.map(function (f) {
+            return '<span class="fchip' + (f.top ? ' top' : '') + '">' +
+              '<em>' + f.emoji + '</em>' + f.name + '</span>';
+          }).join('') +
+        '</div></div>';
+    }).join('') +
+    '<div class="fnote">' + g.foodsCaveat + '</div>';
   }
 
   /* ---------- 이벤트 ---------- */
