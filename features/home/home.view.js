@@ -150,23 +150,33 @@ var HomeView = (function () {
     '</div>';
   }
 
-  /* 비타민D가 든 음식 — 분류별 칩 목록.
-     함량이 특히 높은 것은 파랗게 표시한다(정확한 IU는 적지 않는다 —
-     같은 생선도 자연산·양식·조리법에 따라 몇 배씩 갈리기 때문). */
+  /* 비타민D가 든 음식 — 한 번에 다 펴면 카드가 길어져 읽기 어렵다.
+     분류를 골라 그 분류만 보게 한다. 고른 분류는 화면을 다시 그려도 유지된다. */
+  var foodTab = 0;
+
   function foodGroups(g) {
-    return g.foods.map(function (grp) {
-      return '<div class="fgroup">' +
-        '<div class="fgroup-t">' + grp.group +
-          (grp.note ? '<small>' + grp.note + '</small>' : '') +
-        '</div>' +
-        '<div class="fchips">' +
-          grp.items.map(function (f) {
-            return '<span class="fchip' + (f.top ? ' top' : '') + '">' +
-              '<em>' + f.emoji + '</em>' + f.name + '</span>';
-          }).join('') +
-        '</div></div>';
-    }).join('') +
-    '<div class="fnote">' + g.foodsCaveat + '</div>';
+    if (foodTab >= g.foods.length) foodTab = 0;
+    return '<div class="fseg" id="h-fseg">' +
+        g.foods.map(function (grp, i) {
+          return '<button class="fseg-b' + (i === foodTab ? ' on' : '') + '" data-fg="' + i + '">' +
+                 grp.group + '<span>' + grp.items.length + '</span></button>';
+        }).join('') +
+      '</div>' +
+      '<div id="h-fbody">' + foodBody(g) + '</div>' +
+      '<div class="fnote">' + g.foodsCaveat + '</div>';
+  }
+
+  /* 고른 분류 하나만 그린다. 함량이 특히 높은 것은 파란 칩으로 구분한다
+     (정확한 IU는 적지 않는다 — 자연산·양식·조리법에 따라 몇 배씩 갈리기 때문). */
+  function foodBody(g) {
+    var grp = g.foods[foodTab] || g.foods[0];
+    return (grp.note ? '<div class="fgroup-n">' + grp.note + '</div>' : '') +
+      '<div class="fchips">' +
+        grp.items.map(function (f) {
+          return '<span class="fchip' + (f.top ? ' top' : '') + '">' +
+            '<em>' + f.emoji + '</em>' + f.name + '</span>';
+        }).join('') +
+      '</div>';
   }
 
   /* ---------- 이벤트 ---------- */
@@ -214,6 +224,18 @@ var HomeView = (function () {
     };
     if (q('h-cta-tomorrow')) q('h-cta-tomorrow').onclick = function () { App.enableNotify(); };
     if (q('h-cta-time')) q('h-cta-time').onclick = function () { App.go('timer'); };
+
+    if (m.gap) {
+      [].forEach.call(el.querySelectorAll('[data-fg]'), function (b) {
+        b.onclick = function () {
+          foodTab = +b.dataset.fg;
+          [].forEach.call(el.querySelectorAll('[data-fg]'), function (x) {
+            x.classList.toggle('on', +x.dataset.fg === foodTab);
+          });
+          document.getElementById('h-fbody').innerHTML = foodBody(m.gap);
+        };
+      });
+    }
 
     [].forEach.call(el.querySelectorAll('[data-win]'), function (b) {
       b.onclick = function () { App.startTimer(m.rx.windows[+b.dataset.win]); };
