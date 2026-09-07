@@ -57,7 +57,11 @@ var HomeView = (function () {
     } else if (h.passed) {
       cta = '<button class="act-cta" id="h-cta-tomorrow">' + UI.ICON.bell + '내일 창 알림 받기</button>';
     } else {
-      cta = '<button class="act-cta ghost" id="h-cta-alt">대체 수단 보기</button>';
+      /* 예전엔 '대체 수단 보기'가 아래 음식 카드로 스크롤만 해서
+         무엇을 하는 버튼인지 알기 어려웠다. 이제 타이머로 보내
+         '얼마나 나가야 하는지'를 직접 보여 준다(오늘 창이 없으면 내일 창 기준). */
+      cta = '<button class="act-cta" id="h-cta-time">' + UI.ICON.timer +
+            '나가야 할 시간 보기</button>';
     }
 
     return '<div class="actrow">' +
@@ -135,7 +139,7 @@ var HomeView = (function () {
     return '<div class="sec">' +
       '<div class="c-head">' +
         '<div class="c-ico warm">🍽️</div>' +
-        '<div class="c-t">' + g.title + '<small>햇빛 대신 채우는 방법</small></div>' +
+        '<div class="c-t">' + g.title + '<small>' + g.subtitle + '</small></div>' +
       '</div>' +
       '<div class="sec-desc" style="margin-bottom:12px">' + g.note + '</div>' +
       '<div class="food">' + g.foods.map(function (f) {
@@ -192,9 +196,7 @@ var HomeView = (function () {
       App.startTimer(m.rx.targetWindow);
     };
     if (q('h-cta-tomorrow')) q('h-cta-tomorrow').onclick = function () { App.enableNotify(); };
-    if (q('h-cta-alt')) q('h-cta-alt').onclick = function () {
-      window.scrollTo({ top: document.body.scrollHeight * 0.45, behavior: 'smooth' });
-    };
+    if (q('h-cta-time')) q('h-cta-time').onclick = function () { App.go('timer'); };
 
     [].forEach.call(el.querySelectorAll('[data-win]'), function (b) {
       b.onclick = function () { App.startTimer(m.rx.windows[+b.dataset.win]); };

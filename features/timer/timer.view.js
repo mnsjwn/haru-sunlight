@@ -22,6 +22,9 @@ var TimerView = (function () {
     if (!rx) return null;
     if (rx.activeWindow) return rx.nowPoint;
     if (rx.targetWindow) return rx.targetWindow.best;
+    /* 오늘 창이 하나도 없는 날 — 홈의 '나가야 할 시간 보기'가 여기로 온다.
+       지금 값은 밤이면 무한대라 쓸모가 없으니 내일 창을 기준으로 보여 준다. */
+    if (rx.tomorrow && rx.tomorrow.window) return rx.tomorrow.window.best;
     return rx.nowPoint;
   }
 
@@ -53,7 +56,7 @@ var TimerView = (function () {
           '</div>' +
 
           '<div class="ring">' +
-            '<svg width="250" height="250" viewBox="0 0 250 250">' +
+            '<svg width="100%" height="100%" viewBox="0 0 250 250">' +
               '<defs><pattern id="tring" width="5" height="5" patternUnits="userSpaceOnUse" ' +
                 'patternTransform="rotate(45)">' +
                 '<line x1="0" y1="0" x2="0" y2="5" stroke="#DCE3EE" stroke-width="2.6"/>' +
@@ -98,13 +101,18 @@ var TimerView = (function () {
   function label(running, s, p) {
     if (running) return s.limitLabel + ' 기준 남은 시간';
     if (!p || !isFinite(p.minutes)) return '지금은 자외선이 없어요';
-    return (rx && rx.activeWindow) ? '지금 나가면 필요한 시간' : '다음 창에서 필요한 시간';
+    if (rx && rx.activeWindow) return '지금 나가면 필요한 시간';
+    if (rx && rx.targetWindow) return '다음 창에서 필요한 시간';
+    if (rx && rx.tomorrow && rx.tomorrow.window) return '내일 창에서 필요한 시간';
+    return '다음 창에서 필요한 시간';
   }
 
   function chargeHint(w) {
     if (!rx) return '';
     if (rx.activeWindow) return '창은 ' + UI.hm(rx.activeWindow.end) + '까지';
     if (w) return UI.hmk(w.recommendStart) + '부터 열려요';
+    if (rx.tomorrow && rx.tomorrow.window)
+      return '오늘은 창이 없어요 · 내일 ' + UI.hmk(rx.tomorrow.window.recommendStart) + '부터';
     return '오늘은 열린 창이 없어요';
   }
 

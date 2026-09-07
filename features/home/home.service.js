@@ -206,8 +206,11 @@ var HomeService = (function () {
     var miss = Engine.consecutiveMissDays(daily, false);
     var supplement = rx.profile.supplement;
     return {
-      title: (rx.hasDaytimeData === false ? (rx.isNightNow ? '야간' : '낮 자료 없음') : rx.mode.label) +
-             ' · ' + (miss > 1 ? miss + '일 연속 노출 창 없음' : '오늘은 노출 창 없음'),
+      /* 제목은 '이 카드가 무엇인지'만 말한다.
+         왜 창이 없는지(야간·장마·며칠째)는 아래 note가 이미 설명하므로
+         제목에서 상태를 되풀이하지 않는다. */
+      title: '음식으로 대체 수단',
+      subtitle: '햇빛으로 못 채운 몫을 음식으로 채우는 방법',
       missDays: miss,
       weeklyPercent: weekly.percent,
       foods: FOODS,

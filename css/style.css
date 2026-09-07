@@ -62,20 +62,20 @@ svg { display:block; flex:none; }
   max-width:480px; margin:0 auto; min-height:100%;
   background:var(--bg); position:relative; overflow-x:hidden;
 }
-.screen { display:none; padding-bottom:calc(108px + var(--safe-b)); animation:fadeUp .3s var(--ease); }
+.screen { display:none; padding-bottom:calc(96px + var(--safe-b)); animation:fadeUp .3s var(--ease); }
 .screen.active { display:block; }
 @keyframes fadeUp { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
 
 /* ---------- 페이지 헤더 (큰 제목 + 원형 버튼) ---------- */
 .hdr {
-  padding:28px 20px 4px; display:flex; align-items:flex-start;
+  padding:22px 18px 2px; display:flex; align-items:flex-start;
   justify-content:space-between; gap:14px;
 }
 .hdr-l { min-width:0; }
-.hdr-t { font-size:31px; font-weight:800; letter-spacing:-1.2px; line-height:1.2; }
-.hdr-t.sm { font-size:26px; letter-spacing:-.9px; }
-.hdr-d { margin-top:7px; font-size:13.5px; font-weight:600; color:var(--g500); letter-spacing:-.2px; }
-.hdr-acts { display:flex; gap:9px; flex:none; padding-top:2px; }
+.hdr-t { font-size:26px; font-weight:800; letter-spacing:-1px; line-height:1.22; }
+.hdr-t.sm { font-size:22px; letter-spacing:-.7px; }
+.hdr-d { margin-top:5px; font-size:12.5px; font-weight:600; color:var(--g500); letter-spacing:-.2px; }
+.hdr-acts { display:flex; gap:8px; flex:none; padding-top:2px; }
 
 .iconbtn {
   width:46px; height:46px; border-radius:50%; flex:none; position:relative;
@@ -95,20 +95,20 @@ svg { display:block; flex:none; }
 @keyframes spin { to { transform:rotate(360deg); } }
 
 /* ---------- 액션 행 (원형 버튼 + 파란 알약 CTA) ---------- */
-.actrow { display:flex; align-items:center; gap:9px; padding:18px 20px 6px; }
+.actrow { display:flex; align-items:center; gap:8px; padding:14px 18px 4px; }
 .act-c {
-  width:50px; height:50px; border-radius:50%; flex:none;
+  width:46px; height:46px; border-radius:50%; flex:none;
   background:var(--surface); box-shadow:var(--sh-btn); color:var(--g700);
   display:flex; align-items:center; justify-content:center;
   transition:transform .14s var(--ease);
 }
 .act-c:active { transform:scale(.94); }
-.act-c svg { width:20px; height:20px; }
+.act-c svg { width:19px; height:19px; }
 .act-c em { font-style:normal; font-size:19px; }
 .act-cta {
-  flex:1; min-width:0; height:50px; border-radius:var(--r-pill);
+  flex:1; min-width:0; height:46px; border-radius:var(--r-pill);
   background:var(--blue); color:#fff; box-shadow:var(--sh-blue);
-  font-size:15.5px; font-weight:700; letter-spacing:-.3px;
+  font-size:14.5px; font-weight:700; letter-spacing:-.3px;
   display:flex; align-items:center; justify-content:center; gap:7px;
   transition:transform .14s var(--ease), background .15s;
   padding:0 14px; white-space:nowrap; overflow:hidden;
@@ -119,7 +119,7 @@ svg { display:block; flex:none; }
 
 /* ---------- 섹션 = 떠 있는 카드 ---------- */
 .sec {
-  margin:12px 16px; padding:20px; background:var(--surface);
+  margin:10px 14px; padding:17px; background:var(--surface);
   border-radius:var(--r-card); box-shadow:var(--sh-card);
 }
 /* 예전 구분 블록은 카드 사이 여백이 대신한다 */
@@ -129,34 +129,34 @@ svg { display:block; flex:none; }
 .sec-desc b { color:var(--g700); font-weight:700; }
 
 /* 카드 머리 — 연한 사각 아이콘 + 제목 + 오른쪽 원형 화살표 */
-.c-head { display:flex; align-items:center; gap:11px; margin-bottom:14px; }
+.c-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
 .c-ico {
-  width:36px; height:36px; border-radius:12px; flex:none; background:var(--blue-l);
-  display:flex; align-items:center; justify-content:center; font-size:17px;
+  width:33px; height:33px; border-radius:11px; flex:none; background:var(--blue-l);
+  display:flex; align-items:center; justify-content:center; font-size:16px;
 }
 .c-ico svg { width:19px; height:19px; color:var(--blue); }
 .c-ico.warm { background:var(--orange-l); }
 .c-ico.mint { background:var(--green-l); }
 .c-ico.plum { background:#EFEAFE; }
-.c-t { flex:1; min-width:0; font-size:16px; font-weight:700; letter-spacing:-.35px; }
-.c-t small { display:block; font-size:12px; font-weight:600; color:var(--g500); margin-top:3px; letter-spacing:-.2px; }
+.c-t { flex:1; min-width:0; font-size:15px; font-weight:700; letter-spacing:-.35px; }
+.c-t small { display:block; font-size:11.5px; font-weight:600; color:var(--g500); margin-top:3px; letter-spacing:-.2px; }
 .c-go {
-  width:32px; height:32px; border-radius:50%; flex:none; background:var(--surface-2);
+  width:30px; height:30px; border-radius:50%; flex:none; background:var(--surface-2);
   display:flex; align-items:center; justify-content:center; color:var(--g600);
 }
 .c-go svg { width:15px; height:15px; }
 
 /* 큰 수치 */
 .stat { display:flex; align-items:flex-end; gap:8px; }
-.stat-n { font-size:44px; font-weight:800; letter-spacing:-2.2px; line-height:1; color:var(--blue); }
+.stat-n { font-size:38px; font-weight:800; letter-spacing:-1.9px; line-height:1; color:var(--blue); }
 .stat-n.ink { color:var(--g900); }
 .stat-u { font-size:14px; font-weight:700; color:var(--g500); padding-bottom:5px; letter-spacing:-.3px; }
 .stat-cap { margin-top:7px; font-size:12.5px; font-weight:600; color:var(--g500); letter-spacing:-.2px; }
 .stat-cap b { color:var(--blue); font-weight:700; }
 
 /* 카드 안 요약 수치 두 개 */
-.duo { display:flex; gap:26px; margin-top:2px; }
-.duo-i b { display:block; font-size:26px; font-weight:800; letter-spacing:-1.1px; }
+.duo { display:flex; gap:22px; margin-top:2px; }
+.duo-i b { display:block; font-size:23px; font-weight:800; letter-spacing:-.95px; }
 .duo-i span { display:block; font-size:12px; font-weight:600; color:var(--g500); margin-top:3px; }
 
 /* 2열 타일 */
@@ -164,7 +164,7 @@ svg { display:block; flex:none; }
 .grid2 > .sec { margin:0; }
 
 /* ---------- 알약형 막대 그래프 ---------- */
-.pbars { display:flex; align-items:flex-end; gap:9px; height:158px; }
+.pbars { display:flex; align-items:flex-end; gap:8px; height:136px; }
 .pbar-c { flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end; }
 .pbar {
   width:100%; border-radius:22px; background:var(--surface-2); color:var(--g600);
@@ -248,7 +248,7 @@ svg { display:block; flex:none; }
 
 /* ---------- 버튼 ---------- */
 .btn {
-  width:100%; height:52px; border-radius:var(--r-pill); font-size:15.5px; font-weight:700;
+  width:100%; height:48px; border-radius:var(--r-pill); font-size:15px; font-weight:700;
   letter-spacing:-.3px; transition:transform .13s var(--ease), background .15s;
   display:flex; align-items:center; justify-content:center; gap:7px;
 }
@@ -260,8 +260,8 @@ svg { display:block; flex:none; }
 .btn-sub:active { background:var(--g100); }
 .btn-danger { background:var(--red); color:#fff; }
 .btn:disabled { background:var(--g100); color:var(--g400); transform:none; box-shadow:none; }
-.btn-row { display:flex; gap:9px; padding:0 16px; }
-.btn-wrap { padding:2px 16px; }
+.btn-row { display:flex; gap:8px; padding:0 14px; }
+.btn-wrap { padding:2px 14px; }
 .btn-text { width:100%; padding:13px 0 2px; font-size:14px; font-weight:600;
   color:var(--g500); letter-spacing:-.3px; }
 .btn-text:active { color:var(--g700); }
@@ -282,13 +282,13 @@ svg { display:block; flex:none; }
 .limits { display:flex; flex-direction:column; gap:8px; }
 .limit {
   display:flex; align-items:center; gap:12px;
-  padding:14px; border-radius:var(--r-in); background:var(--surface-2);
+  padding:12px; border-radius:var(--r-in); background:var(--surface-2);
   transition:.2s var(--ease);
 }
 .limit.win { background:var(--blue-l); }
 .limit-ico {
-  width:36px; height:36px; border-radius:12px; flex:none;
-  display:flex; align-items:center; justify-content:center; font-size:17px;
+  width:33px; height:33px; border-radius:11px; flex:none;
+  display:flex; align-items:center; justify-content:center; font-size:16px;
   background:var(--surface);
 }
 .limit.win .limit-ico { background:var(--blue); }
@@ -307,16 +307,16 @@ svg { display:block; flex:none; }
 /* ---------- 창 리스트 ---------- */
 .win-list { display:flex; flex-direction:column; gap:8px; }
 .win-item {
-  display:flex; align-items:center; gap:13px; padding:14px;
+  display:flex; align-items:center; gap:11px; padding:12px;
   background:var(--surface-2); border-radius:var(--r-in);
   transition:.15s var(--ease); text-align:left; width:100%;
 }
 .win-item:active { background:var(--g100); transform:scale(.99); }
 .win-item.best { background:var(--blue-l); }
 .win-rank {
-  width:36px; height:36px; border-radius:12px; flex:none; background:var(--surface);
+  width:33px; height:33px; border-radius:11px; flex:none; background:var(--surface);
   display:flex; align-items:center; justify-content:center;
-  font-size:13px; font-weight:800; color:var(--g600);
+  font-size:12.5px; font-weight:800; color:var(--g600);
 }
 .win-item.best .win-rank { background:var(--blue); color:#fff; }
 .win-time { font-size:15px; font-weight:700; letter-spacing:-.3px; }
@@ -433,18 +433,18 @@ svg { display:block; flex:none; }
 .sw.on::after { transform:translateX(19px); }
 
 /* ---------- 타이머 ---------- */
-.timer-wrap { padding:6px 16px 0; }
+.timer-wrap { padding:4px 14px 0; }
 .timer-card {
   background:var(--surface); border-radius:var(--r-card); box-shadow:var(--sh-card);
-  padding:22px 20px 24px; text-align:center;
+  padding:18px 17px 20px; text-align:center;
 }
-.ring { position:relative; width:250px; height:250px; margin:10px auto 0; }
-.ring svg { transform:rotate(-90deg); }
+.ring { position:relative; width:216px; height:216px; margin:8px auto 0; }
+.ring svg { width:100%; height:100%; transform:rotate(-90deg); }
 .ring-in {
   position:absolute; inset:0; display:flex; flex-direction:column;
   align-items:center; justify-content:center;
 }
-.ring-num { font-size:52px; font-weight:800; letter-spacing:-2.6px; line-height:1; }
+.ring-num { font-size:45px; font-weight:800; letter-spacing:-2.2px; line-height:1; }
 .ring-lab { font-size:13px; font-weight:600; color:var(--g500); margin-top:9px; letter-spacing:-.2px; }
 .ring-pct { font-size:12.5px; font-weight:800; color:var(--blue); margin-top:7px; }
 .timer-live { margin-top:16px; text-align:left; }
@@ -461,7 +461,7 @@ svg { display:block; flex:none; }
 .tnote b { color:var(--g900); font-weight:800; }
 
 /* ---------- 주간 바 차트 ---------- */
-.week { display:flex; gap:6px; align-items:flex-end; height:140px; padding:0 2px; }
+.week { display:flex; gap:6px; align-items:flex-end; height:122px; padding:0 2px; }
 .week-c { flex:1; display:flex; flex-direction:column; align-items:center; gap:7px;
   height:100%; justify-content:flex-end; }
 .week-b { width:100%; border-radius:var(--r-pill); background:var(--surface-2); min-height:6px;
