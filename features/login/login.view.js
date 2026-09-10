@@ -3,9 +3,9 @@
    앱 아이콘과 같은 테마(파란 배경 + 노란 해)로 첫 진입을 맞는다.
    온보딩을 아직 안 한 사용자에게만 뜬다.
 
-   ⚠️ 계정 로그인은 없다. 이 앱은 백엔드가 없고 모든 데이터가 기기에만
+   ⚠️ 게스트 모드 하나뿐이다. 이 앱은 백엔드가 없고 모든 데이터가 기기에만
       남으므로, 인증할 서버도 보관할 계정도 존재하지 않는다.
-      그래서 아이디·비밀번호를 받는 시늉 대신 바로 시작하는 화면으로 만들었다.
+      아이디·비밀번호를 받는 시늉을 하느니 게스트로 바로 들어가는 편이 정직하다.
    ========================================================= */
 var LoginView = (function () {
 
@@ -27,30 +27,16 @@ var LoginView = (function () {
           '<p class="lg-sub">오늘 언제 몇 분 쬐면 되는지<br>계산해서 알려드려요</p>' +
         '</div>' +
 
-        '<div class="lg-points">' +
-          point('☀️', '오늘의 노출 시간', '자외선·기온·태양고도로 딱 몇 분인지') +
-          point('🛡️', '화상과 더위까지 계산', '가장 짧은 값으로 안전하게') +
-          point('📍', '내 지역 기상청 예보', '시·도별로 실시간 반영') +
-        '</div>' +
-
         '<div class="lg-foot">' +
-          '<button class="btn lg-btn" id="lg-start">시작하기</button>' +
-          '<p class="lg-note">30초면 끝나는 질문 2개로 시작해요</p>' +
+          '<button class="btn lg-btn" id="lg-guest">게스트로 시작하기</button>' +
+          '<p class="lg-note">계정 없이 바로 씁니다 · 기록은 이 기기에만 저장돼요</p>' +
         '</div>' +
       '</div>';
 
-    document.getElementById('lg-start').onclick = function () {
+    document.getElementById('lg-guest').onclick = function () {
       hide();
-      OnboardingView.show();
+      OnboardingView.show();   // 피부 타입·지역 두 가지는 계산에 꼭 필요해 여기서 받는다
     };
-  }
-
-  function point(emoji, title, desc) {
-    return '<div class="lg-point">' +
-      '<span class="lg-point-ico">' + emoji + '</span>' +
-      '<div><div class="lg-point-t">' + title + '</div>' +
-      '<div class="lg-point-d">' + desc + '</div></div>' +
-    '</div>';
   }
 
   /* 아이콘과 같은 해 그림 (배경이 이미 파랗기 때문에 해만 그린다) */

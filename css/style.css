@@ -520,15 +520,24 @@ svg { display:block; flex:none; }
   width:calc(100% - 40px); max-width:360px;
   background:rgba(255,255,255,.9); backdrop-filter:saturate(180%) blur(16px);
   border-radius:var(--r-pill); box-shadow:var(--sh-nav);
-  display:flex; justify-content:space-between; padding:8px; gap:6px; z-index:40;
+  display:flex; justify-content:space-between; padding:7px; gap:4px; z-index:40;
 }
+/* 탭은 눌리는 면적을 넓게 쓰되(flex:1), 선택 표시는 정원(正圓)으로 그린다.
+   버튼 자체에 border-radius:50%를 주면 폭이 높이보다 넓어서 타원이 됐다.
+   그래서 배경만 고정 크기 원으로 따로 깔고 아이콘을 그 위에 올린다. */
 .tab {
-  flex:1; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  flex:1; height:52px; position:relative;
+  display:flex; align-items:center; justify-content:center;
   color:var(--g400); transition:.18s var(--ease); background:transparent;
 }
-.tab svg { width:23px; height:23px; }
+.tab::before {
+  content:''; position:absolute; width:52px; height:52px; border-radius:50%;
+  background:transparent; transition:.2s var(--ease);
+}
+.tab svg { width:23px; height:23px; position:relative; }
 .tab:active { transform:scale(.93); }
-.tab.on { background:var(--blue); color:#fff; box-shadow:var(--sh-blue); }
+.tab.on { color:#fff; }
+.tab.on::before { background:var(--blue); box-shadow:var(--sh-blue); }
 
 /* ---------- 시작 화면 ---------- */
 #login { position:fixed; inset:0; z-index:120; display:none;
@@ -541,21 +550,13 @@ svg { display:block; flex:none; }
   animation:lgIn .5s var(--ease);
 }
 @keyframes lgIn { from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;} }
-.lg-top { padding-top:72px; text-align:center; }
+.lg-top { margin:auto 0; text-align:center; }
 .lg-icon { display:flex; justify-content:center;
   filter:drop-shadow(0 12px 22px rgba(11,45,110,.34)); animation:lgSun 5s ease-in-out infinite; }
 @keyframes lgSun { 0%,100%{transform:translateY(0) rotate(0);} 50%{transform:translateY(-7px) rotate(6deg);} }
 .lg-title { margin-top:26px; font-size:37px; font-weight:800; color:#fff; letter-spacing:-1.4px; }
 .lg-sub { margin-top:14px; font-size:16px; font-weight:500; color:rgba(255,255,255,.9);
   line-height:1.6; letter-spacing:-.3px; }
-.lg-points { margin:auto 0; display:flex; flex-direction:column; gap:10px; }
-.lg-point {
-  display:flex; align-items:center; gap:14px; padding:16px 18px;
-  border-radius:20px; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.2);
-}
-.lg-point-ico { font-size:22px; flex:none; }
-.lg-point-t { font-size:15.5px; font-weight:700; color:#fff; letter-spacing:-.3px; }
-.lg-point-d { font-size:13px; font-weight:500; color:rgba(255,255,255,.82); margin-top:3px; }
 .lg-foot { padding-bottom:4px; }
 .lg-btn { background:#fff; color:var(--blue-d); font-size:16.5px; box-shadow:0 10px 24px rgba(9,30,90,.24); }
 .lg-btn:active { background:#EAF1FF; }
