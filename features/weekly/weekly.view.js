@@ -235,6 +235,8 @@ var WeeklyView = (function () {
           document.getElementById('w-' + id).hidden = (id !== view);
         });
         window.scrollTo(0, 0);
+        var ap = document.getElementById('app');
+        if (ap) ap.scrollTop = 0;   // 데스크톱 기기 틀에서는 #app이 스크롤된다
       };
     });
     var home = document.getElementById('w-home');

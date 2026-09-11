@@ -115,8 +115,16 @@ var App = (function () {
     }
     applyActiveTab(tab);
     if (tab !== 'timer') TimerView.stopLoop();
-    window.scrollTo(0, 0);
+    scrollTop();
     refreshView();
+  }
+
+  /* 데스크톱에서는 기기 틀 안의 #app이 스크롤되고, 휴대폰에서는 창이 스크롤된다.
+     탭을 바꿨을 때 맨 위로 올리려면 둘 다 손봐야 한다. */
+  function scrollTop() {
+    window.scrollTo(0, 0);
+    var a = document.getElementById('app');
+    if (a) a.scrollTop = 0;
   }
 
   function refreshView() {
